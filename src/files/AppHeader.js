@@ -51,7 +51,7 @@ export default class AppHeader extends React.Component {
                 }}>
                     <FlexBand wrap="nowrap" className="justify-content-end">
                         <FlexBandItem>
-                            <Tooltip title="Update avaible">
+                            {/* <Tooltip title="Update avaible">
                                 <IconButton
                                     style={{
                                         width: 36,
@@ -65,7 +65,7 @@ export default class AppHeader extends React.Component {
                                         }} 
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip> */}
                         </FlexBandItem>
                         <FlexBandItem>
                             <Tooltip title="Properties">
