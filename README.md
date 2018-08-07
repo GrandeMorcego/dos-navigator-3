@@ -46,13 +46,30 @@ Electron JS applications currently require two processes to be run simultaneousl
 The first one is Front-end packaging served by WebPack dev-server:
 
 ```sh
-yarn start
+yarn start-dev
 ```
+
+Now you need to check if `const createWindow` in `./src/electron-main.js` file looks like this:
+
+```javascript
+const createWindow = () => {
+    mainWindow = new BrowserWindow({
+        width: 1500, 
+        height: 900,
+        title: 'Dos Navigator III',
+    })
+    mainWindow.loadURL("http://localhost:8888")
+    // mainWindow.loadURL(`file://${__dirname}/../build/index.html`, { });
+    
+    mainWindow.on('closed', () => { mainWindow = null; });
+}
+```
+
 
 The second one is Electron JS itself. So, open a new terminal window and 
 
 ```sh
 cd dn3/
-yarn electron
+yarn start
 ```
 
