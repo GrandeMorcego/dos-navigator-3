@@ -67,17 +67,23 @@
         ]
       },
       "electronWinstallerConfig": {
-        "name": "dn3"
+        "setupIcon": "./icons/icons/win/icon.ico",
+        "name": "Dos Navigator III"
       },
-      "electronInstallerDebian": {},
+      "electronInstallerDMG": {
+        "icon": "./icons/icons/mac/icon.icns"
+      },
+      "electronInstallerDebian": {
+        "setupIcon": "./icons/icons/png/64x64.png"
+      },
       "electronInstallerRedhat": {},
       "github_repository": {
-        "owner": "",
-        "name": ""
+        "owner": "GrandeMorcego",
+        "name": "dos-navigator-3"
       },
       "windowsStoreConfig": {
         "packageName": "",
-        "name": "dn3"
+        "name": "Dos Navigator III"
       }
     }
   },
