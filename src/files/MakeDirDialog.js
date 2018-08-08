@@ -23,7 +23,6 @@ export default class MakeDirDialog extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this.state.pathError)
         core.on("getPanelManager", (event, manager) => {
             this.setState({manager: manager})
         })
@@ -36,7 +35,6 @@ export default class MakeDirDialog extends React.Component {
                 })
                 if (this.props.open){
                     this.props.onClose();
-                    // core.emit('changeSelectedFile', 0);
                 }
             } else {
                 this.setState({pathError: true});

@@ -1,3 +1,4 @@
+// Node JS imports 
 import React, {Component} from 'react';
 import ln3 from "ln3";
 import FlexBand, { FlexBandItem } from "flexband";
@@ -6,7 +7,7 @@ import PropTypes from "prop-types";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex/dist/commonjs";
 import { Paper } from '@material-ui/core';
 
-// Local JS Files imports
+// JS Files imports
 import FilePanelManager from './Manager';
 import FilePanel from './FilePanel';
 import PathPanel from './PathPanel';
@@ -79,7 +80,6 @@ export default class DrivePanel extends Component {
 
     handleDriveChanged = (event, activePart) => {
         if (activePart == this.props.partId) {
-            console.log(activePart);
             this.manager.readFiles(core.location[this.props.partId].disk, true);
         }
     }

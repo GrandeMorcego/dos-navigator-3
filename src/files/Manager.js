@@ -74,7 +74,6 @@ export default class FilePanelManager extends ObservedObject {
             let fileData;
             core.ipc.once('readFileContentCallback', (event, status, data) => {
                 if (status != 'ERR') {
-                    console.log(file.name);
                     core.emit('gotFileContent', data, file, this.location.path);
                 } else {
                     console.log("ERRIPC: ", data);
@@ -91,9 +90,7 @@ export default class FilePanelManager extends ObservedObject {
         // if (file.ext != '.SH') {
             core.ipc.send('execFile', path + '/' + file.name);
             core.ipc.once('execFileCallback', (event, status, err) => {
-                if (status == "SUCCESS") {
-                    console.log(status)
-                } else {
+                if (status != "SUCCESS") {
                     console.log('Error: ', err);
                     if (err.code == 'EACCES') {
                         core.emit('displayError', 'This file cannot be executed');

@@ -9,15 +9,11 @@ import { Tabs, Tab, IconButton, Snackbar, Dialog, DialogContent, DialogActions, 
 import {Close, MoreVert} from '@material-ui/icons';
 import os from 'os';
 
-// import * as monaco from 'monaco-editor';
-// import * as monaco from 'monaco-editor';
-
 
 // local imports
 import OptionsDialog from './files/OptionsDialog';
 import core from "./system/core";
 import DrivePanel from "./files/DrivePanel";
-import defaults from "../local/settings";
 import FileEditor from './files/FileEditor';
 import DNTerminal from './files/terminal/Terminal';
 import CloseConfirmDialog from './files/CloseConfirmDialog';
@@ -111,15 +107,6 @@ const muiTheme = createMuiTheme({
     }
 })
 
-// const muiTheme = getMuiTheme({
-//     palette: {
-//         primary1Color: teal400, // indigo400,
-//         primary2Color: teal700, // indigo700,
-//         accent1Color: deepOrange500,
-//         accent2color: greenA100,
-//     },
-// });
-
 class Main extends Component {
     constructor(props, context) {
         super(props, context);
@@ -167,8 +154,9 @@ class Main extends Component {
         core.on('displayError', this.handleOpenErrorSnackbar);
         core.on('openDrives', this.handleDrivesClick);
         core.ipc.on('getDrivesCallback', this.handleGetFiles);
-        if (localStorage.getItem('defaultPath')) {
-            core.location = JSON.parse(localStorage.getItem('defaultPath'))
+        let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
+        if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
+            core.location = defaultPath;
             this.setState({startLocation: core.location});
         }
     }
@@ -252,7 +240,6 @@ class Main extends Component {
     }
 
     handleEditFile = (event, data, file, path) => {
-        // this.state.tabs.push(file.name);
         let noCreate;
         this.state.tabs.find((tab) => {
             if (tab.name == file.name) {
@@ -291,7 +278,6 @@ class Main extends Component {
     }
 
     handleKeyDown(event) {
-        // console.log("key down: ", event);
         core.emit("keyDown", event);
     }
 
@@ -375,7 +361,6 @@ class Main extends Component {
     }
 
     handleTabChange = (event, value) => {
-        console.log(value)
         this.setState({tabValue: value});
     }
 
@@ -430,12 +415,8 @@ class Main extends Component {
             color: "#E8EAF6",
         };
 
-        const left = defaults.leftPanelStart;
-        const right = defaults.rightPanelStart;
-        
         return (
 	        <MuiThemeProvider theme={muiTheme} >
-                {/* {(!this.state.terminalOn)?  */}
                 <Dialog open={this.state.welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
                     <DialogTitle><span style={{color: '#ffffff'}}>{'Welcome to Dos Navigator III Alpha!'}</span></DialogTitle>
                     <DialogContent>
@@ -511,10 +492,6 @@ class Main extends Component {
                                                 openOptionsDialog={this.handleOpenOptionsDialog}
                                                 isFocused={this.state.activePart === "left"}
                                                 partId="left"
-                                                // location={ left ? left.location : {
-                                                //     drive: defaults.startDrive,
-                                                //     path: defaults.startPath,
-                                                // } }
                                                 location={this.state.startLocation.left}
                                                 onFocusRequest={this.handleFocusRequest}
                                             />
@@ -527,10 +504,6 @@ class Main extends Component {
                                                     openOptionsDialog={this.handleOpenOptionsDialog}
                                                     isFocused={this.state.activePart === "right"}
                                                     partId="right"
-                                                    // location={ right ? right.location : {
-                                                    //     drive: defaults.startDrive,
-                                                    //     path: defaults.startPath,
-                                                    // } }
                                                     location={this.state.startLocation.right}
                                                     onFocusRequest={this.handleFocusRequest}
                                                 />
@@ -538,7 +511,7 @@ class Main extends Component {
                                         </ReflexElement>
                                     </ReflexContainer>
                                 ) : (tab.type == 'fileEdit') ? (
-                                    this.state.tabValue === tab.name && //<div key={index} id={'editor-container-'+tab.name} style={{width: '100%', height: '100%'}}></div>
+                                    this.state.tabValue === tab.name &&
                                     <FileEditor
                                         key={index}
                                         name={tab.name}

@@ -74,7 +74,6 @@ class SimpleFileLine extends Component {
     }
 
     handleClick = (event) => {
-        console.log(event.type)
         if (event.type == "contextmenu") {
             this.handleClickMenu(event);
         }
@@ -219,7 +218,8 @@ class SimpleFileListContainer extends Component {
         this.props.manager.on("refresh", this.handleRefresh).
             on("focusOn", this.handleChangeCurrent);
         this.props.manager.on("gotFileContent", this.handleFileContent);
-        let options = (localStorage.getItem("additionalColumns"))?localStorage.getItem("additionalColumns").split("~*~"):[];
+        let additionalColumns = localStorage.getItem("additionalColumns");
+        let options = (additionalColumns)?additionalColumns.split("~*~"):[];
 
         this.state.columnSizes.push(300);
         options.forEach(() => {
@@ -284,7 +284,6 @@ class SimpleFileListContainer extends Component {
     updateColumns = () => {
         let options = localStorage.getItem("additionalColumns").split("~*~");
         let diff = options.length - (this.state.columnSizes.length-1);
-        console.log(diff);
         if (diff > 0 ) {
             for (let i=0; i<diff; i++) {
                 this.state.columnSizes.push(0);
@@ -640,8 +639,6 @@ class SimpleFileListContainer extends Component {
                 dialogOpened: core.dialogOpened
             });    
 
-            // console.log("Key command: ", cmd);
-
             let clearEvent = core.eventKeyModifiers(event) === 0;
             
             if (cmd) {
@@ -699,7 +696,6 @@ class SimpleFileListContainer extends Component {
                             this.props.manager.filesSelectByColor(file, false);
                             break;
                         case "makeDir":
-                            console.log('I am here')
                             this.props.openActionDialog('mkDirDialog');
                             break;
                         case "move":
@@ -711,8 +707,6 @@ class SimpleFileListContainer extends Component {
                             this.props.manager.deleteFiles(file);
                             break; 
                         case 'changePanelMode':
-                            // core.changeFilePanelMode();
-                            // this.setState({panelMode})
                             for (let i = 0; i<core.filePanelAvaibleModes.length; i++) {
                                 if (core.filePanelAvaibleModes[i] == this.state.filePanelMode && i != core.filePanelAvaibleModes.length-1) {
                                     this.setState({filePanelMode: core.filePanelAvaibleModes[i+1]});
@@ -725,10 +719,7 @@ class SimpleFileListContainer extends Component {
                             this.forceUpdate();
                             break;
                         case 'editFile':
-                            let fileData = this.props.manager.readFile(file) 
-                            if (fileData == 'ERRISDIR') {
-                                console.log("File is an directory");
-                            }
+                            this.props.manager.readFile(file) 
                             break;
                         case 'copyFile':
                             core.emit("getPanelFile", this.props.manager, file);
@@ -824,8 +815,6 @@ class SimpleFileListContainer extends Component {
     }
 
     handleClick(file) {
-        console.log("Click!");
-
         let regDbClick = this.state.regDbClick + 1;
         this.setState({
             regDbClick: regDbClick,
@@ -849,8 +838,6 @@ class SimpleFileListContainer extends Component {
         }, 1000);
 
         if (core.isShiftPressed) {
-            // core.emit("changeSelection", file.name)
-            // console.log(file)
             let selectingFiles;
             let onOff;
             if (this.state.currentIndex < file.index+1) {
@@ -865,7 +852,6 @@ class SimpleFileListContainer extends Component {
                 onOff = true;
             }
             
-            console.log(selectingFiles);
             this.props.manager.selectMultipleFiles(selectingFiles, onOff);
         }
 
@@ -883,7 +869,6 @@ class SimpleFileListContainer extends Component {
     }
 
     handleSplitterMouseDown = (event) => {
-        console.log('Mouse down');
         let id = event.target.id.split('-')[1];
         let elementWidth = document.getElementById(this.props.panelId + "column-"+id).offsetWidth;
         let prevElementWidth = document.getElementById(this.props.panelId + "column-"+(id-1).toString()).offsetWidth;
@@ -901,7 +886,6 @@ class SimpleFileListContainer extends Component {
 
     handleSplitterMouseUp = () => {
         if (this.state.isResizing) {
-            console.log('Mouse released');
             this.setState({
                 mousePosition: null,
                 isResizing: false,
@@ -926,17 +910,9 @@ class SimpleFileListContainer extends Component {
             }
             let delta = this.state.mousePosition - event.clientX;
             let id = this.state.eventId.split('-')[1];
-            // let mousePos = event.clientX;
-            // // console.log("Delta: ", delta);
-            // let elementWidth = document.getElementById(this.props.panelId + "column-"+id).offsetWidth;
-            // let prevElementWidth = document.getElementById(this.props.panelId + "column-"+(id-1).toString()).offsetWidth;
-            // console.log("Delta: ", delta);
+            
             let columnSizes = this.state.columnSizes;
-            // if (delta < 0 && id > 1){
-            //     columnSizes[id-1] = elementWidth-delta;
-            // } else {
-            //     columnSizes[id-1] = this.state.targetWidth-delta;
-            // }
+
             if (id == columnSizes.length - 1 && this.state.eventId.includes('sec')) {
                 columnSizes[id] = this.state.targetWidth - delta
             } else {
@@ -960,13 +936,13 @@ class SimpleFileListContainer extends Component {
         const {
             currentIndex,
         } = this.state;
-
         const {
             isFocused,
             panelId,
         } = this.props;
         let gridSize = "";
         let columns = this.state.columnSizes;
+
         for (let i=0; i<columns.length; i++) {
             if (columns[i] == 0) {
                 gridSize += "auto "
@@ -974,7 +950,7 @@ class SimpleFileListContainer extends Component {
                 gridSize += columns[i] + 'px '
             }
         }
-        // console.log(gridSize);
+
         return (
             (this.state.filePanelMode == "column")?
             <div 
@@ -990,7 +966,6 @@ class SimpleFileListContainer extends Component {
                     { this.props.files.map( (file, index) => {
                         file.index = index;
                         file.isCurrent = currentIndex === index;
-                        // console.log(file);
                         return (
                             <SimpleFileLine 
                                 className={disableSelection}

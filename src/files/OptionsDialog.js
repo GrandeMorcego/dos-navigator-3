@@ -13,14 +13,14 @@ export default class OptionsDialog extends React.Component {
     constructor(props) {
         super(props);
         let path =  (os.type == "Darwin" || os.type == "Linux")? '/':'C:/'
+        let additionalColumns = localStorage.getItem("additionalColumns");
+        let columnMode = localStorage.getItem('columnMode');
+        let defaultPath = localStorage.getItem('defaultPath');
         this.state = {
-            // firstOption: localStorage.getItem("firstOption"),
-            // secondOption: localStorage.getItem("secondOption"),
-            // thirdOption: localStorage.getItem("thirdOption"),
-            additionalColumns: (localStorage.getItem("additionalColumns"))?localStorage.getItem("additionalColumns").split("~*~"): ['init', 'init', 'init', 'init'],
-            columnMode: (localStorage.getItem('columnMode'))?localStorage.getItem("columnMode"):'init',
+            additionalColumns: (additionalColumns)?additionalColumns.split("~*~"): ['init', 'init', 'init', 'init'],
+            columnMode: (columnMode)?columnMode:'init',
             tabValue: 'defaultPath',
-            defaultPath: (localStorage.getItem('defaultPath'))? JSON.parse(localStorage.getItem('defaultPath')): {
+            defaultPath: (defaultPath)? JSON.parse(defaultPath): {
                 left: {
                     drive: 'files',
                     disk: path
@@ -79,7 +79,6 @@ export default class OptionsDialog extends React.Component {
             this.state.errorMessage[panelId] = 'You cannot set default path into the temporary directory';
             this.state.error[panelId] = true;
         }
-        console.log(event.target.value);
         let defaultPath = this.state.defaultPath;
         defaultPath[panelId].path = event.target.value;
         this.setState({defaultPath: defaultPath})
@@ -98,6 +97,7 @@ export default class OptionsDialog extends React.Component {
         const selectStyle = {
             marginTop: 4
         }
+
         return (
             <Dialog
                 open={this.props.open}
@@ -113,12 +113,10 @@ export default class OptionsDialog extends React.Component {
                         onChange={this.handleTabChange} 
                     >
                         <Tab
-                            // style={{height: tabHeight}}
                             value={'defaultPath'}
                             label={'Default Path'}
                         />
                         <Tab
-                            // style={{height: tabHeight}}
                             value={'additionalCols'}
                             label={'Additional Columns'}
                         />

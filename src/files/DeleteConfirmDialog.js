@@ -25,7 +25,6 @@ export default class DeleteConfirmDialog extends React.Component {
                         files: [],
                         perm: false,
                     });
-                    // core.emit("changeSelectedFile", 0);
                 }
             } else {
                 console.log(status, file);

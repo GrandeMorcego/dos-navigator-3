@@ -21,7 +21,6 @@ export default class DNTerminal extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this.props.terminalId);
         Terminal.applyAddon(attach);
         Terminal.applyAddon(fit);
         Terminal.applyAddon(fullscreen);
@@ -30,7 +29,6 @@ export default class DNTerminal extends React.Component {
         });
 
         axios.post('/api/openTerminal', {}).then((response) => {
-            console.log(response.data);
             this.setState({pid: response.data});
             this.terminal.open(document.getElementById("terminal" + this.props.terminalId));
             // terminal.fit()
@@ -53,7 +51,6 @@ export default class DNTerminal extends React.Component {
         let e = new KeyboardEvent('keydown', {
             key: 'Enter',
         });
-        console.log(e);
         // e.key = "Enter";
         document.dispatchEvent(e);
     

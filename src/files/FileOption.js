@@ -8,6 +8,8 @@ import core from '../system/core'
 export default class FileOption extends React.Component {
     constructor(props) {
         super(props);
+        let columnMode = localStorage.getItem('columnMode');
+        let additionalColumns = localStorage.getItem("additionalColumns");
         this.state = {
             size: '',
             optionName: "",
@@ -15,8 +17,8 @@ export default class FileOption extends React.Component {
             modifyTime: (this.props.file)?props.file.modifiedTime:null,
             openTime: (this.props.file)?props.file.openTime:null,
             type: (this.props.file)?props.file.type:null,
-            columnMode: (localStorage.getItem('columnMode'))? localStorage.getItem('columnMode'): 'size',
-            options: (localStorage.getItem("additionalColumns"))? localStorage.getItem("additionalColumns").split("~*~"):['init', 'init', 'init'],
+            columnMode: (columnMode)? columnMode: 'size',
+            options: (additionalColumns)? additionalColumns.split("~*~"):['init', 'init', 'init'],
         }
     }
 
@@ -55,14 +57,6 @@ export default class FileOption extends React.Component {
                 }
             }
 
-            // let options = {
-            //     year: 'numeric',
-            //     month: 'short',
-            //     day: 'numeric',
-            //     hour: 'numeric',
-            //     minute: '2-digit',
-            // }
-
             let options = {
                 year: '2-digit',
                 month: 'numeric',
@@ -94,15 +88,13 @@ export default class FileOption extends React.Component {
         core.off('updateItems', this.updateItem);
     }
 
-    // doForceUpdate = () => {
-    //     this.forceUpdate();
-    // }
-
     updateItem = () => {
-        if (localStorage.getItem('columnMode') || localStorage.getItem("additionalColumns").split("~*~")) {
+        let columnMode = localStorage.getItem('columnMode');
+        let additionalColumns = localStorage.getItem('additionalColumns')
+        if (columnMode || additionalColumns) {
             this.setState({
-                columnMode: localStorage.getItem('columnMode'),
-                options: localStorage.getItem("additionalColumns").split("~*~"),
+                columnMode: columnMode,
+                options: additionalColumns,
             });
         }
 

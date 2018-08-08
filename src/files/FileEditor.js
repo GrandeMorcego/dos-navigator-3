@@ -55,11 +55,7 @@ export default class FileEditor extends React.Component {
         this.props.onChange(this.props.name, value);
         this.setState({data: value})
     }
-    // handleFileData = (event, name, data) => {
-    //     if (name == this.props.name) {
-    //         this.setState({data: data});
-    //     }
-    // }
+
     handleKeyDown = (eventType, event) => {
         const cmd = core.keyMapper.mapKeyEvent(event, 'fileEdit');
         if (cmd) {

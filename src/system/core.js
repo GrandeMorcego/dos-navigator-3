@@ -107,8 +107,6 @@ class Core extends ObservedObject {
 
             this.showCheckboxes = false;
 
-            // this.selected = {}
-
             this.keyMapper = new KeyMapper();
 
         } catch (error) {
@@ -359,7 +357,6 @@ class Core extends ObservedObject {
     * Changes file panel displayng mode: column or row
     */
     changeFilePanelMode() {
-        console.log(this.filePanelMode)
         // this.filePanelMode = 'row'
         for (let i = 0; i<this.filePanelAvaibleModes.length; i++) {
             if (this.filePanelAvaibleModes[i] == this.filePanelMode && i != this.filePanelAvaibleModes.length-1) {

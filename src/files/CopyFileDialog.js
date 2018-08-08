@@ -26,7 +26,6 @@ export default class MakeDirDialog extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this.state.displayPath);
         core.on("getPanelFile", (event, manager, file) => {
             this.setState({
                 manager: manager,
@@ -43,24 +42,11 @@ export default class MakeDirDialog extends React.Component {
                 })
                 if (this.props.open){
                     this.props.onClose();
-                    // core.emit('changeSelectedFile', 0);
                 }
             } else {
                 console.log('ERR: ', err);
             }
         })
-    }
-    
-    componentWillReceiveProps() {
-        // this.setState({
-        //     displayPath: this.props.location.path + '/',
-        //     transLocation: this.props.location.path + '/'
-        // });
-        // if (this.state.path != ('' || null)) {
-        //     let event = {target: {value: this.state.path}};
-        //     this.handlePathChange(event);
-        // }
-        
     }
 
     handlePathChange = (event) => {
@@ -114,12 +100,6 @@ export default class MakeDirDialog extends React.Component {
             <Dialog open={this.props.open} onClose={this.props.onClose}>
                 <DialogTitle> <span style={{color: '#ffffff'}}>{'Copy File'} </span> </DialogTitle>
                 <DialogContent>
-                    {/* {
-                        (this.state.activePart === "left")? 
-                        <Typography style={{color: '#ffffff',}}> {this.props.location[this.state.activePart].path + '/' + this.state.path} </Typography>:
-                        <Typography style={{color: '#ffffff',}}> {this.props.location[this.state.activePart].path + '/' + this.state.path} </Typography> 
-                                
-                    } */}
                     {(this.state.file)? <Typography style={{color: '#ffffff'}}> {this.props.location.path + '/' + this.state.file.name} </Typography>:null}
                     <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
                     <TextField 

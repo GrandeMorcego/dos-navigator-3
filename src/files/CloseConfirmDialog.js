@@ -27,7 +27,6 @@ export default class CloseConfirmDialog extends React.Component {
 
     getDataCallback = (event, data) => {
         this.setState({data: data});
-        console.log(data);
     }
 
     electronCallback = (event, status) => {

@@ -23,6 +23,8 @@ export default class BasicDrive extends ObservedObject {
         }
         listHandlers[sender] = handler;
 
+        console.log('Gettings files: ', location);
+
         core.ipc.send("needFiles", {
                 sender: sender,
                 location: location,
