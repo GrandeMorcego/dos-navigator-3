@@ -18,7 +18,7 @@ Dos Navigator III is a project based on Electron JS by the son of the original a
 
 #### Installation
 
-Pre-requisites: NodeJS and Yarn package manager should be installed on your system
+Pre-requisites: NodeJS (v8.4 or later) and Yarn package manager should be installed on your system
 
 
 After you have this project cloned onto your system, proceed with Node JS environment setup:
@@ -28,29 +28,17 @@ cd dn3
 yarn install
 ```
 
+Note: various systems may require some specific packages to be installed in order to build Electron run-time 
+
 #### Running a developer's build
 
-Now you need to check if `const createWindow` in `./src/electron-main.js` file looks like this:
-
-```javascript
-const createWindow = () => {
-    mainWindow = new BrowserWindow({
-        width: 1500, 
-        height: 900,
-        title: 'Dos Navigator III',
-    })
-    mainWindow.loadURL("http://localhost:8888")
-    // mainWindow.loadURL(`file://${__dirname}/../build/index.html`, { });
-    
-    mainWindow.on('closed', () => { mainWindow = null; });
-}
-```
 
 Electron JS applications currently require two processes to be run simultaneously. 
 
 The first one is Front-end packaging served by WebPack dev-server:
 
 ```sh
+cd dn3/
 yarn start-dev
 ```
 
@@ -58,6 +46,31 @@ The second one is Electron JS itself. So, open a new terminal window and
 
 ```sh
 cd dn3/
-yarn start
+export NODE_ENV=dev && yarn start
 ```
 
+(on Windows, use "set" instead of "export" to set and environment variable)
+
+
+### Building a productions package
+
+To prepare a production package, the front-end should be built first. Note that on first stages of the development no minification and other optimization is performed 
+
+```sh
+cd dn3/
+yarn build
+```
+
+Once the front-end is built, it is possible to either prepare a package containing all necessary binaries (specific to the system  which the package is build on)
+
+```sh
+export NODE_ENV=prod && yarn package
+```
+
+or prepare an installation package ready to be distributed:
+
+```sh
+export NODE_ENV=prod && yarn make
+```
+
+in either case, the output files will be placed into dedicated subdirectory of the dn3/out directory

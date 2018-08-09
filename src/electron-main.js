@@ -34,6 +34,9 @@ let mainWindow = null;
 
 let fileWatchers = {};
 
+const isDev = (process.env.NODE_ENV + " ").toLowerCase().startsWith("dev") ;
+
+console.log("Running environment: ", isDev ? "DEV" : "PROD");
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
@@ -42,10 +45,12 @@ const createWindow = () => {
         title: 'Dos Navigator III',
         icon: '../icons/logo.png'
     })
-    mainWindow.loadURL("http://localhost:8888")
-    // mainWindow.loadURL(`file://${__dirname}/../build/index.html`, { });
 
-    // mainWindow.webContents.toggleDevTools();
+    mainWindow.loadURL(isDev ? "http://localhost:8888" : `file://${__dirname}/../build/index.html`, { });
+
+    if (isDev) {
+        mainWindow.webContents.toggleDevTools();
+    }
 
     mainWindow.on('closed', () => { mainWindow = null; });
 }

@@ -10,6 +10,7 @@
     "build": "webpack --config webpack.config.js",
     "build-prod": "webpack --config webpack.config.prod.js",
     "start": "electron-forge start",
+    "electron": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
