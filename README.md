@@ -46,10 +46,10 @@ The second one is Electron JS itself. So, open a new terminal window and
 
 ```sh
 cd dn3/
-export NODE_ENV=dev && yarn start
+yarn electron
 ```
 
-(on Windows, use "set" instead of "export" to set and environment variable)
+(on Windows, add `-win` to command)
 
 
 ### Building a productions package
@@ -64,13 +64,15 @@ yarn build
 Once the front-end is built, it is possible to either prepare a package containing all necessary binaries (specific to the system  which the package is build on)
 
 ```sh
-export NODE_ENV=prod && yarn package
+yarn package
 ```
 
 or prepare an installation package ready to be distributed:
 
 ```sh
-export NODE_ENV=prod && yarn make
+yarn make
 ```
+
+(on Windows, add `-win` to command)
 
 in either case, the output files will be placed into dedicated subdirectory of the dn3/out directory
