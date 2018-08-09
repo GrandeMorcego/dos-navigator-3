@@ -54,6 +54,7 @@
         ]
       },
       "electronPackagerConfig": {
+        "icon": "./icons/icons/mac/icon.icns",
         "packageManager": "yarn",
         "asar": false,
         "ignore": [
@@ -69,9 +70,6 @@
       "electronWinstallerConfig": {
         "setupIcon": "./icons/icons/win/icon.ico",
         "name": "Dos Navigator III"
-      },
-      "electronInstallerDMG": {
-        "icon": "./icons/icons/mac/icon.icns"
       },
       "electronInstallerDebian": {
         "setupIcon": "./icons/icons/png/64x64.png"

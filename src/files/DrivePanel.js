@@ -93,6 +93,7 @@ export default class DrivePanel extends Component {
     handleKeyDown = () => {
         if (this.props.isFocused) {
             const cmd = core.keyMapper.mapKeyEvent(event, 'drivePanel');
+            console.log(cmd);
             if (cmd) {
                 switch (cmd.command) {
                     case 'makeDir':
@@ -100,7 +101,7 @@ export default class DrivePanel extends Component {
                         core.emit("getPanelManager", this.manager);
                         break;
                     case 'createFile':
-                        this.handleOpenDialog('createFileDialoge');
+                        this.handleOpenDialog('createFileDialog');
                         core.emit("getPanelManager", this.manager);
                         break;
                     default: 
@@ -157,9 +158,11 @@ export default class DrivePanel extends Component {
     }
 
     handleOpenDialog = (dialog) => {
-        this.state.open[dialog] = !this.state.open[dialog];
-        core.dialogOpened = !core.dialogOpened;
-        this.forceUpdate();
+        if (dialog) {
+            this.state.open[dialog] = !this.state.open[dialog];
+            core.dialogOpened = !core.dialogOpened;
+            this.forceUpdate();
+        } 
     }
 
     render() {

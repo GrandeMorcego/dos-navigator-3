@@ -114,7 +114,7 @@ export default class CreateFileDialog extends React.Component {
     render() {
         return (
             <Dialog open={this.props.open} onClose={this.props.onClose}>
-                <DialogTitle> <span style={{color: '#ffffff'}}>{'Add directory'} </span> </DialogTitle>
+                <DialogTitle> <span style={{color: '#ffffff'}}>{'Create file'} </span> </DialogTitle>
                 <DialogContent>
                     {/* {
                         (this.state.activePart === "left")? 

@@ -42,8 +42,8 @@ const createWindow = () => {
         title: 'Dos Navigator III',
         icon: '../icons/logo.png'
     })
-    // mainWindow.loadURL("http://localhost:8888")
-    mainWindow.loadURL(`file://${__dirname}/../build/index.html`, { });
+    mainWindow.loadURL("http://localhost:8888")
+    // mainWindow.loadURL(`file://${__dirname}/../build/index.html`, { });
 
     // mainWindow.webContents.toggleDevTools();
 
