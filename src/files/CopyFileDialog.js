@@ -10,13 +10,14 @@ import FilePanelManager from './Manager';
 export default class MakeDirDialog extends React.Component {
     constructor(props) {
         super(props);
-        let nextPanel = (this.props.panelId == "left")? 'right':'right'
+        let nextPanel = (this.props.panelId == "left")? 'right':'left'
 
         this.state = {
             path: '',
-            nextPanel: (this.props.panelId == "left")? 'right':'right',
+            nextPanel: nextPanel,
             pathError: false,
             label: '',
+            errorMessage: '',
             manager: null,
             displayPath: core.location[nextPanel].path,
             transPath:  '',
@@ -26,12 +27,9 @@ export default class MakeDirDialog extends React.Component {
     }
 
     componentDidMount() {
-        core.on("getPanelFile", (event, manager, file) => {
-            this.setState({
-                manager: manager,
-                file: file
-            })
-        })
+        core.on("getPanelFile", this.handleGetFile);
+
+        core.on('currentLocationChange', this.handleLocationChange);
 
         core.ipc.on('copyFileCallback', (event, status, err) => {
             if (status === 'SUCCESS') {
@@ -49,18 +47,37 @@ export default class MakeDirDialog extends React.Component {
         })
     }
 
+    handleGetFile = (event, manager, file) => {
+        console.log('Got FILE: ', file);
+        this.setState({
+            manager: manager,
+            file: file
+        });
+        this.forceUpdate();
+    }
+
+    handleLocationChange = (event, part) => {
+        if (part != this.props.panelId) {
+            this.setState({
+                displayPath: core.location[this.state.nextPanel].path,
+                transLocation: core.location[this.state.nextPanel].path
+            })
+        }
+    }
+
     handlePathChange = (event) => {
         let value = event.target.value;
         this.setState({
             path: value,
             pathError: false,
+            errorMessage: '',
             transLocation: core.location[this.state.nextPanel].path
         })
 
         if (this.state.manager) {
             let newPath = this.state.manager.reformatPath(value, core.location[this.state.nextPanel].path);
 
-            if (newPath[0] == '/') { 
+            if (newPath[0] == 'root') { 
                 this.setState({
                     displayPath: value,
                     transPath: value,
@@ -81,16 +98,24 @@ export default class MakeDirDialog extends React.Component {
                     displayPath: newPath[1],
                     transPath: value
                 })
+            } else if (newPath[0] == "ERR") {
+                this.setState({
+                    pathError: true,
+                    errorMessage: newPath[1]
+                })
             }
         }
     }
 
     handleCopyClick = () => {
-        if (this.state.path == "" || !this.state.path) {
-            core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.file.name);
-        } else {
-            core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.transPath);
+        if (!this.state.pathError) {
+            if (this.state.path == "" || !this.state.path) {
+                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.file.name);
+            } else {
+                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.transPath);
+            }
         }
+        
     }
 
    
@@ -104,7 +129,7 @@ export default class MakeDirDialog extends React.Component {
                     <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
                     <TextField 
                         error={this.state.pathError} 
-                        label="Enter path" 
+                        label={(this.state.pathError)? this.state.errorMessage : 'Enter path'}
                         fullWidth={true} 
                         onChange={this.handlePathChange} 
                         value={this.state.path} 

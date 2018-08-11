@@ -14,6 +14,7 @@ export default class CreateFileDialog extends React.Component {
             location: props.location.path,
             path: '',
             pathError: false,
+            errorMessage: '',
             label: '',
             manager: null,
             displayPath: props.location.path + '/',
@@ -28,6 +29,7 @@ export default class CreateFileDialog extends React.Component {
         })
         core.ipc.on('createFileCallback', (event, status, err) => {
             if (status === 'SUCCESS') {
+                core.dialogOpened = false;
                 if (this.props.open){
                     this.props.onClose();
                     let nameSplitted = this.state.transPath.split('.');
@@ -68,6 +70,7 @@ export default class CreateFileDialog extends React.Component {
         this.setState({
             path: value,
             pathError: false,
+            errorMessage: '',
             transLocation: this.state.location
         })
 
@@ -94,18 +97,26 @@ export default class CreateFileDialog extends React.Component {
                     displayPath: newPath[1],
                     transPath: value
                 })
+            } else if (newPath[0] == "ERR") {
+                this.setState({
+                    pathError: true,
+                    errorMessage: newPath[1]
+                })
             }
         }
         
     }
 
     handleCreateClick = () => {
-        if (this.state.path == "" || !this.state.path) {
-            this.setState({pathError: true});
-        } else if (this.state.pathError) {
-            this.setState({pathError: false});
-        } else {
-            core.ipc.send("createFile", this.state.transLocation+ '/' + this.state.transPath);
+        if (!this.state.pathError) {
+            if (this.state.path == "" || !this.state.path) {
+                this.setState({
+                    pathError: true,
+                    errorMessage: 'Path cannot be empty'
+                });
+            } else {
+                core.ipc.send("createFile", this.state.transLocation+ '/' + this.state.transPath);
+            }
         }
     }
 
@@ -125,7 +136,7 @@ export default class CreateFileDialog extends React.Component {
                     <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
                     <TextField 
                         error={this.state.pathError} 
-                        label="Enter path" 
+                        label={(this.state.pathError)? this.state.errorMessage :"Enter path" }
                         fullWidth={true} 
                         onChange={this.handlePathChange} 
                         value={this.state.path} 

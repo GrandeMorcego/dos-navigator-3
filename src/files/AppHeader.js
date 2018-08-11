@@ -89,7 +89,7 @@ export default class AppHeader extends React.Component {
                             </Tooltip>
                                 <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
                                     <MenuItem onClick={this.props.openOptions}> Preferences </MenuItem>
-                                    <MenuItem> Key commands </MenuItem>   
+                                    <MenuItem onClick={this.props.openKeyCommands}> Key commands </MenuItem>   
                                 </Menu>
                         </FlexBandItem>
                     </FlexBand>

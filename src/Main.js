@@ -19,6 +19,7 @@ import DNTerminal from './files/terminal/Terminal';
 import CloseConfirmDialog from './files/CloseConfirmDialog';
 import AppHeader from './files/AppHeader';
 import ChangeDriveDialog from './files/ChangeDriveDialog';
+import KeyCommandsDialog from './files/KeyCommandsDialog';
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -103,7 +104,11 @@ const muiTheme = createMuiTheme({
                 color: '#ffffff',
             }
         },
-
+        MuiTypography: {
+            body1: {
+                color: '#ffffff' 
+            }
+        }
     }
 })
 
@@ -126,6 +131,7 @@ class Main extends Component {
             tabValue: 'Files',
             terminalOn: false,
             openCloseConfirmDialog: false,
+            openKeyCommandsDialog: false,
             isClosing: {},
             nextTerminalId: 1,
             startLocation: core.location,
@@ -146,6 +152,9 @@ class Main extends Component {
         window.addEventListener("keydown", this.handleKeyDown);
         window.addEventListener("keyup", this.handleKeyUp);
         window.addEventListener("keypress", this.handleKeyPress);
+        window.addEventListener("resize", () => {
+            this.forceUpdate();
+        })
         core.on("keyDown", this.handleSpecialKeyDown);
         core.on("keyUp", this.handleSpecialKeyUp);
         core.on('gotFileContent', this.handleEditFile);
@@ -405,6 +414,10 @@ class Main extends Component {
         this.setState({welcomeDialog: false});
         localStorage.setItem("welcome", 'true');
     }
+
+    handleOpenKeyCommands = () => {
+        this.setState({openKeyCommandsDialog: !this.state.openKeyCommandsDialog});
+    }
     
     render() {
         const sflStyle = {      
@@ -459,6 +472,10 @@ class Main extends Component {
                             </IconButton>
                         }
                     />
+                    <KeyCommandsDialog
+                        open={this.state.openKeyCommandsDialog}
+                        onClose={this.handleOpenKeyCommands}
+                    />
                     <ChangeDriveDialog 
                         open={this.state.openChangeDrivesDialog}
                         drives={this.state.drives}
@@ -479,6 +496,7 @@ class Main extends Component {
                         onChange={this.handleTabChange}
                         onCloseClick={this.handleCloseClick}
                         openOptions={this.handleOpenOptionsDialog}
+                        openKeyCommands={this.handleOpenKeyCommands}
                     />
                     <div style={{height: window.innerHeight-tabHeight}}>
                         {this.state.tabs.map((tab, index) => {

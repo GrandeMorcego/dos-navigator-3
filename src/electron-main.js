@@ -13,7 +13,7 @@ const ncp = require('ncp').ncp;
 const trash = require('trash');
 const childProccess = require('child_process');
 const drivelist = require('drivelist');
-let usb = require('usb');
+let usbDetect = require('usb-detection');
 
 // let spawn;
 // try {
@@ -37,6 +37,8 @@ let fileWatchers = {};
 const isDev = (process.env.NODE_ENV + " ").toLowerCase().startsWith("dev") ;
 
 console.log("Running environment: ", isDev ? "DEV" : "PROD");
+
+usbDetect.startMonitoring();
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
@@ -124,14 +126,21 @@ const getDrives = () => {
     })
 }
 
-
-usb.on('attach', () => {
+usbDetect.on('add', () => {
     let timeout = setTimeout(() => {
         getDrives();
     }, 3000);
 })
 
-usb.on('detach', () => {
+
+
+usbDetect.on('change', () => {
+    let timeout = setTimeout(() => {
+        getDrives();
+    }, 3000);
+})
+
+usbDetect.on('remove', () => {
     getDrives();
 })
 
@@ -468,6 +477,10 @@ ipcMain.on("needFiles", (event, data) => {
 // expApp.listen(3030);
 
 app.on('ready', createWindow);
+
+app.on('before-quit', () => {
+    usbDetect.stopMonitoring();
+})
 
 
 app.on('window-all-closed', () => {

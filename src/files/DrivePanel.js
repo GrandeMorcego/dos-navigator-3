@@ -114,7 +114,7 @@ export default class DrivePanel extends Component {
     handleGetFiles = (event, data) => {
         this.setState({ location: data.location });
         core.location[this.props.partId] = data.location
-        core.emit('currentLocationChange', data.location, this.props.partId);
+        core.emit('currentLocationChange', this.props.partId);
         this.forceUpdate();
     }
 

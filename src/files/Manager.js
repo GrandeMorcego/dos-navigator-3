@@ -3,6 +3,7 @@ import ObservedObject from "observed-object";
 import ln3 from "ln3";
 import { BrowserWindow, ipcMain } from 'electron';
 import { configureRequestOptions } from 'builder-util-runtime';
+import os from 'os';
 
 
 export default class FilePanelManager extends ObservedObject {
@@ -219,8 +220,10 @@ export default class FilePanelManager extends ObservedObject {
     }
 
     reformatPath(value, location) {
-        if (value.charAt(0) == '/') {
-            return ['/', value]
+        if ((value.charAt(0) == '/'  && os.type != "Windows_NT") || (value.charAt(1) == ':'  && os.type == "Windows_NT")) {
+            return ['root', value]
+        } else if ((value.charAt(1) == ':' && os.type != "Windows_NT") || (value.charAt(0) == '/' && os.type == "Windows_NT")) {
+            return ['ERR', 'Wrong path format']
         } else if (value.charAt(0) == '.' && value.charAt(1) == '.' && value.charAt(2) == '/') {
             let path = value.split("/");
             let counter = 0;
@@ -246,6 +249,7 @@ export default class FilePanelManager extends ObservedObject {
             
             let finalPath = location + '/' +newValue;
             return ['./', finalPath, newValue]
+        
         } else {
             let finalPath = location + '/' + value 
             return ['any', finalPath, value]

@@ -23,11 +23,13 @@ export default class OptionsDialog extends React.Component {
             defaultPath: (defaultPath)? JSON.parse(defaultPath): {
                 left: {
                     drive: 'files',
-                    disk: path
+                    disk: path,
+                    path: os.homedir()
                 },
                 right: {
                     drive: 'files',
-                    disk: path
+                    disk: path,
+                    path: os.homedir()
                 }
             },
             errorMessage: {
@@ -72,7 +74,10 @@ export default class OptionsDialog extends React.Component {
     handlePathChange = (event, panelId) => {
         this.state.errorMessage[panelId] = '';
         this.state.error[panelId] = false;
-        if (os.tye == 'Windows_NT') {
+        if (event.target.value == '' || event.target.value == ' ') {
+            this.state.error[panelId] = true;
+            this.state.errorMessage[panelId] = 'Default path cannot be empty';
+        } else if (os.type == 'Windows_NT') {
             let disk = event.target.value.charAt(0) + '://';
             this.state.defaultPath[panelId].disk = disk;
         } else if (os.type == 'Darwin' && event.target.value.split('/')[1] == "Volumes") {
