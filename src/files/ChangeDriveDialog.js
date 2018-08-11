@@ -10,6 +10,8 @@ import os from 'os';
 // JS Files imports
 import core from '../system/core';
 
+const isWin32 = (os.type == 'Windows_NT');
+
 export default class ChangeDriveDialog extends React.Component {
     constructor(props) {
         super(props);
@@ -35,9 +37,48 @@ export default class ChangeDriveDialog extends React.Component {
         core.location[this.props.activePart].disk = this.state.drive;
         core.emit('driveChanged', this.props.activePart);
     }
+
+    compareDrives = (drive1, drive2) => {
+        console.log("compare ", drive1, drive2);
+        if (drive1 === drive2) return 0;
+        return -1;
+    }
     
 
     render() {
+        const {
+            drives,
+            onClose,
+        } = this.props;
+
+        const points = [];
+
+        if (drives) {
+            drives.forEach( drive => {
+                const { mountpoints } = drive;
+                if (mountpoints && mountpoints[0]) {
+                        mountpoints.forEach( 
+                            (point, id) => points.push({
+                                point: point,
+                                upperName: point.path.toLocaleUpperCase(),
+                            })
+                        );
+                }
+            });
+
+            points.sort( ( point1, point2 ) => point1.upperName.localeCompare(point2.upperName) );
+            console.log("----> points: ", points, ' - win32 -- ', os.type);
+        }
+
+        const mountPoints = points.map( ({ point, upperName }) => (
+            <FormControlLabel
+                key={ upperName }
+                value={ point.path }
+                control={ <Radio color="default"/> }
+                label={ isWin32 ? point.path : point.label}
+            />
+        ));
+
         return (
             <Dialog
                 open={this.props.open}
@@ -50,24 +91,7 @@ export default class ChangeDriveDialog extends React.Component {
                             value={this.state.drive}
                             onChange={this.handleDriveChange}
                         >
-                            {(this.props.drives)?
-                                this.props.drives.map((drive) => {
-                                    if (drive.mountpoints && drive.mountpoints[0]) {
-                                        return (
-                                            drive.mountpoints.map((point, id) => {
-                                                return (
-                                                    <FormControlLabel
-                                                        key={id}
-                                                        value={point.path}
-                                                        control={<Radio color="default"/>}
-                                                        label={(os.type == 'Windows_NT')? point.path:point.label}
-                                                    />
-                                                )
-                                            })
-                                        )  
-                                    }
-                                }): null
-                            }
+                            { mountPoints }
                         </RadioGroup>
                     </FormControl>
                 </DialogContent>
