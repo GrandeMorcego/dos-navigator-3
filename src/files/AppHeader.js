@@ -25,7 +25,21 @@ export default class AppHeader extends React.Component {
         this.setState({menuOpen: !this.state.menuOpen, itemMenu: event.currentTarget});
     }
 
+    propHandler(prop, event) {
+        this.setState({ menuOpen: false });
+        const handler = this.props[prop];
+        if (handler) {
+            handler(event);
+        }
+    }
+
+    handleOpenOptions = event => this.propHandler("openOptions", event);
+
+    handleOpenKeyCommands = event => this.propHandler("openKeyCommands", event);
+
+    
     render() {
+
         return (
             <FlexBand wrap="nowrap" style={{height: tabHeight}} >
                 <FlexBandItem style={{ width: '90%'}}>
@@ -88,8 +102,8 @@ export default class AppHeader extends React.Component {
                                 </IconButton>
                             </Tooltip>
                                 <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
-                                    <MenuItem onClick={this.props.openOptions}> Preferences </MenuItem>
-                                    <MenuItem onClick={this.props.openKeyCommands}> Key commands </MenuItem>   
+                                    <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
+                                    <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem>   
                                 </Menu>
                         </FlexBandItem>
                     </FlexBand>
