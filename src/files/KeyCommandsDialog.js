@@ -42,7 +42,7 @@ export default class KeyCommandsDialog extends React.Component {
                     <Typography> Ctrl+- - deselect files by type </Typography>
                     <Typography> Ctrl+Shift+= - select files by color </Typography>
                     <Typography> Ctrl+Shift+- - deselect files by color </Typography>
-                    <Typography> Alt+F5 - toggle file panel view </Typography>
+                    <Typography> Ctrl+1 - swith file panel view </Typography>
                     <Typography> Alt+ArrowUp - open parent dir </Typography>
                 </DialogContent>
                 <DialogActions>

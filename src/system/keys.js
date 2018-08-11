@@ -48,7 +48,8 @@ export default class KeyMapper {
         { key: "F3", command: "viewFile", where: "filePanel", when: ""},
         { key: "F4", command: "editFile", where: "filePanel", when: ""},
         { key: "Shift+F4", command: "createFile", where: "drivePanel", when: ""},
-        { key: "Alt+F5", command: "changePanelMode", where: "filePanel", when: ""},
+        
+        { key: "Ctrl+1", command: "changePanelMode", where: "filePanel", when: ""},
 
         { key: "Ctrl+F1", command: "openNewWindow", where: "filePanel", when: ""},
 
