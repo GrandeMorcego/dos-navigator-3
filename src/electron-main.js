@@ -459,13 +459,19 @@ ipcMain.on('gitCommitRepo', (event, repo, message) => {
     repo.status.files.forEach((file) => {
         files.push(file.path);
     })
-
-    simpleGit(repo.path).commit(message, files).then((status) => {
+    
+    simpleGit(repo.path).add(repo.status.not_added).then((status) => {
         console.log(status);
-        mainWindow.webContents.send("gitCommitRepoCallback", status);
+        simpleGit(repo.path).commit(message, files).then((status) => {
+            console.log(status);
+            mainWindow.webContents.send("gitCommitRepoCallback", status);
+        }).catch((err) => {
+            console.log(err);
+        })
     }).catch((err) => {
         console.log(err);
     })
+    
 })
 
 ipcMain.on('gitPushRepo', (event, repo) => {
@@ -474,6 +480,16 @@ ipcMain.on('gitPushRepo', (event, repo) => {
         mainWindow.webContents.send("gitPushRepoCallback", status);
     }).catch((err) => {
         console.log(err);
+    })
+})
+
+ipcMain.on('gitCloneRepo', (event, repoPath, dir, name) => {
+    simpleGit(dir).clone(repoPath, dir + '/' + name).then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("gitCloneRepoCallback", status);
+    }).catch((err) => {
+        console.log(err);
+        mainWindow.webContents.send("gitCloneRepoCallback", err, true);
     })
 })
 

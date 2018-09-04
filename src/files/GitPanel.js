@@ -1,9 +1,12 @@
+// Node JS imports
 import React from 'react';
 import { Typography, TextField, IconButton } from '@material-ui/core';
 import { Done, ArrowUpward, ArrowDownward } from '@material-ui/icons';
 
+// JS Files imports
 import core from '../system/core';
 import FlexBand, { FlexBandItem } from 'flexband';
+import GitMenuDialog from './GitMenuDialog';
 
 export default class GitPanel extends React.Component {
     constructor(props) {
@@ -16,6 +19,7 @@ export default class GitPanel extends React.Component {
             partId: '',
             commitMessage: '',
             isFocused: false,
+            openGitMenu: false,
         }
     }
 
@@ -29,9 +33,7 @@ export default class GitPanel extends React.Component {
     }
 
     handleKeyDown = () => {
-        const cmd = core.keyMapper.mapKeyEvent(event, 'gitPanel', {
-            gitIsFocused: this.state.isFocused,
-        });
+        const cmd = core.keyMapper.mapKeyEvent(event, 'gitPanel');
 
         if (cmd) {
             switch(cmd.command) {
@@ -63,7 +65,8 @@ export default class GitPanel extends React.Component {
     }
 
     handleOpenGitMenu = () => {
-        
+        this.setState({openGitMenu: !this.state.openGitMenu});
+        core.dialogOpened = !core.dialogOpened;
     }
 
     handleIsRepo = (event, part, path, gitRepo) => {
@@ -107,7 +110,7 @@ export default class GitPanel extends React.Component {
     }
 
     render() {
-        let { gitRepo, commitMessage } = this.state;
+        let { gitRepo, commitMessage, openGitMenu } = this.state;
         let { activePart } = this.props;
         let currentRepo = gitRepo[activePart];
 
@@ -185,7 +188,11 @@ export default class GitPanel extends React.Component {
                         </div>
                     ): 'File isnt a repo'
                 }
-                {/* <GitMenuDialog /> */}
+                <GitMenuDialog 
+                    open={openGitMenu}
+                    onClose={this.handleOpenGitMenu}
+                    activePart={activePart}
+                />
             </div>
         );
     }
