@@ -8,12 +8,13 @@ import os from 'os';
 
 export default class FilePanelManager extends ObservedObject {
 
-    constructor(panelId, location) {
+    constructor(panelId, location, partId) {
         super();
         this.selectedCount = 0;
         this.files = null;
         this.currentIndex = 0;
         this.panelId = panelId;
+        this.partId = partId;
         this.driveHandler = null;
         this.location = location;
     }
@@ -256,7 +257,7 @@ export default class FilePanelManager extends ObservedObject {
         }
     }
 
-    handleGetFiles = (location, files) => {
+    handleGetFiles = (location, files, gitRepo) => {
         if (this.files) {
             this.files.forEach( file => {
                 file.e = null;
@@ -283,6 +284,8 @@ export default class FilePanelManager extends ObservedObject {
         };
 
         this.selectedCount = 0;
+
+        core.emit('fileIsRepo', this.partId, location.path, gitRepo);
         
         this.emit("files", { files: this.files, location: this.location, prevSubPath: location.previousSubPath } );
     }

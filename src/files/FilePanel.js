@@ -646,7 +646,9 @@ class SimpleFileListContainer extends Component {
 
                 const managerCmd = manager["command" + cmd.command.capitalize()];
 
-                if (managerCmd) {
+                if (cmd.command == 'toggleQuickSearch' && core.isGitFocused) {
+                    return null;
+                } else if (managerCmd) {
                     managerCmd({ file: file });
 
                 } else {

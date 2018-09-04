@@ -13,6 +13,7 @@ const ncp = require('ncp').ncp;
 const trash = require('trash');
 const childProccess = require('child_process');
 const drivelist = require('drivelist');
+const simpleGit = require('simple-git/promise');
 let usbDetect = require('usb-detection');
 
 // let spawn;
@@ -321,6 +322,7 @@ ipcMain.on("needFiles", (event, data) => {
 
     let dir = location.path;
     const add = location.addToPath;
+    const git = simpleGit(dir);
     
     console.log("Get FILES: ", dir);
     if (fromHomeDir) {
@@ -423,10 +425,57 @@ ipcMain.on("needFiles", (event, data) => {
             })
         }
 
-        mainWindow.webContents.send("getFiles", sender, location, list, err);
+        simpleGit(dir).checkIsRepo().then((isRepo) => {
+            console.log('File is repo ', isRepo);
+            
+            mainWindow.webContents.send("getFiles", sender, location, list, {isRepo}, err);
+        })
     } );
 
 } );
+
+ipcMain.on('getRepoStatus', (event, dir) => {
+    simpleGit(dir).status().then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("getRepoStatusCallback", status);
+    });
+})
+
+ipcMain.on('gitPullRepo', (event, repo) => {
+    simpleGit(repo.path).pull('origin', repo.status.current).then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("gitPullRepoCallback", status);
+    }).catch((err) => {
+        console.log(err);
+    })
+
+
+});
+
+ipcMain.on('gitCommitRepo', (event, repo, message) => {
+    console.log(message, ' ', repo.path);
+    let files = [];
+
+    repo.status.files.forEach((file) => {
+        files.push(file.path);
+    })
+
+    simpleGit(repo.path).commit(message, files).then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("gitCommitRepoCallback", status);
+    }).catch((err) => {
+        console.log(err);
+    })
+})
+
+ipcMain.on('gitPushRepo', (event, repo) => {
+    simpleGit(repo.path).push('origin', repo.status.current).then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("gitPushRepoCallback", status);
+    }).catch((err) => {
+        console.log(err);
+    })
+})
 
 // expApp.get("/test", (req, res) => {
 //     res.send('Express is open');

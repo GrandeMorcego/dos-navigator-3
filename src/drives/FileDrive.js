@@ -34,12 +34,12 @@ export default class BasicDrive extends ObservedObject {
 
     }
 
-    handleGetFiles = (event, sender, location, files ) => {
+    handleGetFiles = (event, sender, location, files, gitRepo ) => {
         console.log("! GOT FILES: ", files);
-        const handler = this.listHandlers[sender];
+            const handler = this.listHandlers[sender];
 
         if (handler) {
-            handler(location, files)
+            handler(location, files, gitRepo);
         }
         
     }

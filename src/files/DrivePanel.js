@@ -62,7 +62,7 @@ export default class DrivePanel extends Component {
         };
         this.panelId = nextPanelId++;
 
-        this.manager = new FilePanelManager(this.panelId, props.location);
+        this.manager = new FilePanelManager(this.panelId, props.location, props.partId);
     }
 
     componentDidMount() {
@@ -87,13 +87,13 @@ export default class DrivePanel extends Component {
     handleDirectoryUpdate = (event, dir) => {
         if (dir == this.state.location.path) {
             this.manager.readFiles();
+            core.ipc.send('getRepoStatus', dir);
         }
     }
 
-    handleKeyDown = () => {
+    handleKeyDown = (eventType, event) => {
         if (this.props.isFocused) {
             const cmd = core.keyMapper.mapKeyEvent(event, 'drivePanel');
-            console.log(cmd);
             if (cmd) {
                 switch (cmd.command) {
                     case 'makeDir':

@@ -20,6 +20,7 @@ import CloseConfirmDialog from './files/CloseConfirmDialog';
 import AppHeader from './files/AppHeader';
 import ChangeDriveDialog from './files/ChangeDriveDialog';
 import KeyCommandsDialog from './files/KeyCommandsDialog';
+import GitPanel from './files/GitPanel';
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -504,7 +505,13 @@ class Main extends Component {
                                 (tab.type == "filePanel")? (
                                     this.state.tabValue === tab.name && 
                                     <ReflexContainer key={index} orientation="vertical"  >
-                                        <ReflexElement className="left-pane" minSize="400" >
+                                        <ReflexElement className="left-pane">
+                                            <GitPanel 
+                                                activePart={this.state.activePart}
+                                            />
+                                        </ReflexElement>
+                                        <ReflexSplitter />
+                                        <ReflexElement className="middle-pane" minSize="350" >
                                             
                                             <DrivePanel
                                                 openOptionsDialog={this.handleOpenOptionsDialog}
@@ -516,7 +523,7 @@ class Main extends Component {
     
                                         </ReflexElement>
                                         <ReflexSplitter />
-                                        <ReflexElement className="right-pane" minSize="400">
+                                        <ReflexElement className="right-pane" minSize="350">
                                         
                                                 <DrivePanel
                                                     openOptionsDialog={this.handleOpenOptionsDialog}

@@ -51,6 +51,8 @@ class Core extends ObservedObject {
             this.isAltPressed = false;
             this.isMetaPressed = false;
 
+            this.isGitFocused = false;
+
             this.saveStatus = {
 
             }
@@ -66,11 +68,13 @@ class Core extends ObservedObject {
                     drive: 'files',
                     disk: disk,
                     path: os.homedir(),
+                    isRepo: false,
                 },
                 right: {
                     drive: 'files',
                     disk: disk,
                     path: os.homedir(),
+                    isRepo: false,
                 }
             }
 

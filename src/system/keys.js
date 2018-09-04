@@ -36,7 +36,9 @@ export default class KeyMapper {
         { key: "Ctrl+Shift+_", command: "deselectFilesByColor", where: "filePanel", when: ""},
         { key: "Ctrl+p", command: "openOptions", where: "main", when: ""},
         { key: "Meta+p", command: "openOptions", where: "main", when: ""},
-        
+        { key: "Meta+t", command: "openGitMenu", where: 'gitPanel', when: ""},      
+        { key: "Ctrl+t", command: "openGitMenu", where: 'gitPanel', when: ""},      
+
         { key: "F5", command: "copyFile", where: "filePanel", when: ""},
         { key: "Shift+F5", command: "copyCurrent", where: "filePanel", when: ""},
         { key: "F6", command: "move", where: "filePanel", when: ""},
@@ -53,17 +55,16 @@ export default class KeyMapper {
 
         { key: "Ctrl+F1", command: "openNewWindow", where: "filePanel", when: ""},
 
-        { key: 'Meta+s', command: 'saveFile', where: "fileEdit", when: ""},
-        { key: 'Ctrl+s', command: 'saveFile', where: "fileEdit", when: ""},
-        { key: 'Meta+o', command: 'openTerminal', where: 'main', when: ""},
-        { key: 'Ctrl+o', command: 'openTerminal', where: 'main', when: ""},
-        { key: 'Ctrl+c', command: 'fastCopyFile', where: 'filePanel', when: ""},
-        { key: 'Meta+c', command: 'fastCopyFile', where: 'filePanel', when: ""},  
-        { key: 'Ctrl+x', command: 'fastCutFile', where: 'filePanel', when: ""},
-        { key: 'Meta+x', command: 'fastCutFile', where: 'filePanel', when: ""},  
-        { key: 'Ctrl+v', command: 'pasteFile', where: 'filePanel', when: ""},
-        { key: 'Meta+v', command: 'pasteFile', where: 'filePanel', when: ""},        
-      
+        { key: "Meta+s", command: 'saveFile', where: "fileEdit", when: ""},
+        { key: "Ctrl+s", command: 'saveFile', where: "fileEdit", when: ""},
+        { key: "Meta+o", command: 'openTerminal', where: 'main', when: ""},
+        { key: "Ctrl+o", command: 'openTerminal', where: 'main', when: ""},
+        { key: "Ctrl+c", command: 'fastCopyFile', where: 'filePanel', when: ""},
+        { key: "Meta+c", command: 'fastCopyFile', where: 'filePanel', when: ""},  
+        { key: "Ctrl+x", command: 'fastCutFile', where: 'filePanel', when: ""},
+        { key: "Meta+x", command: 'fastCutFile', where: 'filePanel', when: ""},  
+        { key: "Ctrl+v", command: 'pasteFile', where: 'filePanel', when: ""},
+        { key: "Meta+v", command: 'pasteFile', where: 'filePanel', when: ""},        
 
         
     ];
@@ -119,10 +120,12 @@ export default class KeyMapper {
                                     dirSelected,
                                     commandLine,
                                     searchActive,
-                                    dialogOpened
+                                    dialogOpened,
+                                    gitIsFocused
                                 } = context;
-    
-                                return eval(key.when);
+                                if (!gitIsFocused) {
+                                    return eval(key.when);
+                                }
                             }
                             return eval(key.when);
                         } else {
