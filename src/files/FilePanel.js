@@ -212,7 +212,7 @@ class SimpleFileListContainer extends Component {
         window.addEventListener("mouseup", this.handleSplitterMouseUp);
         window.addEventListener("mousemove", this.handleSplitterDrag);
         core.on("keyDown", this.handleKeyDown);
-        core.on('changeSelectedFile', this.handleChangeSelected);
+        // core.on('changeSelectedFile', this.handleChangeSelected);
         core.on("updateItems", this.updateColumns);
         core.ipc.on('fastCopyFileCallback', this.fastCopyFileCallback);
         this.props.manager.on("refresh", this.handleRefresh).
@@ -232,7 +232,7 @@ class SimpleFileListContainer extends Component {
         window.removeEventListener("mouseup", this.handleSplitterMouseUp);
         window.removeEventListener("mousemove", this.handleSplitterDrag);
         core.off("keyDown", this.handleKeyDown);
-        core.off('changeSelectedFile', this.handleChangeSelected);
+        // core.off('changeSelectedFile', this.handleChangeSelected);
         core.off("updateItems", this.updateColumns);
         core.ipc.removeListener('fastCopyFileCallback', this.fastCopyFileCallback);
         this.props.manager.off("refresh", this.handleRefresh).

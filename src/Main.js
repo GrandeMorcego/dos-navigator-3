@@ -140,7 +140,8 @@ class Main extends Component {
             openErrorSnackbar: false,
             drives: null,
             openChangeDrivesDialog: false,
-            welcomeDialog: (localStorage.getItem("welcome"))? false:true
+            welcomeDialog: (localStorage.getItem("welcome"))? false:true,
+            openGitPanel: true,
         };
 
         console.log("window SIZE: ", window);
@@ -343,11 +344,19 @@ class Main extends Component {
                 case 'openOptions':
                     this.handleOpenOptionsDialog();
                     break;
+                case 'toggleGitPanel':
+                    this.toggleGitPanel();
+                    break;
                 default: 
                     console.log("There is no command assigned on this key combination");
             }
         }
         
+    }
+
+    toggleGitPanel = () => {
+        this.setState({openGitPanel: !this.state.openGitPanel});
+        this.forceUpdate();
     }
 
     handleSpecialKeyUp = (eventType, event) => {
@@ -429,6 +438,8 @@ class Main extends Component {
             color: "#E8EAF6",
         };
 
+        let { openGitPanel } = this.state;
+
         return (
 	        <MuiThemeProvider theme={muiTheme} >
                 <Dialog open={this.state.welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
@@ -498,43 +509,56 @@ class Main extends Component {
                         onCloseClick={this.handleCloseClick}
                         openOptions={this.handleOpenOptionsDialog}
                         openKeyCommands={this.handleOpenKeyCommands}
+                        toggleGitPanel={this.toggleGitPanel}
                     />
                     <div style={{height: window.innerHeight-tabHeight}}>
                         {this.state.tabs.map((tab, index) => {
                             return (
                                 (tab.type == "filePanel")? (
                                     this.state.tabValue === tab.name && 
-                                    <ReflexContainer key={index} orientation="vertical"  >
-                                        <ReflexElement className="left-pane">
-                                            <GitPanel 
-                                                activePart={this.state.activePart}
-                                            />
-                                        </ReflexElement>
-                                        <ReflexSplitter />
-                                        <ReflexElement className="middle-pane" minSize="350" >
-                                            
-                                            <DrivePanel
-                                                openOptionsDialog={this.handleOpenOptionsDialog}
-                                                isFocused={this.state.activePart === "left"}
-                                                partId="left"
-                                                location={this.state.startLocation.left}
-                                                onFocusRequest={this.handleFocusRequest}
-                                            />
-    
-                                        </ReflexElement>
-                                        <ReflexSplitter />
-                                        <ReflexElement className="right-pane" minSize="350">
-                                        
-                                                <DrivePanel
-                                                    openOptionsDialog={this.handleOpenOptionsDialog}
-                                                    isFocused={this.state.activePart === "right"}
-                                                    partId="right"
-                                                    location={this.state.startLocation.right}
-                                                    onFocusRequest={this.handleFocusRequest}
+                                        <ReflexContainer key={index} orientation="vertical">
+                                            <ReflexElement 
+                                                className={'left-pane'} 
+                                                orientation="vertical" 
+                                                maxSize={openGitPanel? '300' : '0'}
+                                            >
+                                                <GitPanel 
+                                                    activePart={this.state.activePart}
                                                 />
-                                    
-                                        </ReflexElement>
-                                    </ReflexContainer>
+                                            
+                                            </ReflexElement>
+                                            {/* {openGitPanel? 
+                                                <ReflexSplitter />
+                                             : null} */}
+                                            
+                                            <ReflexElement className={"right-pane"}>
+                                                <ReflexContainer key={index} orientation="vertical">
+                                                    <ReflexElement className={'left-pane'} minSize="350" >
+                                                                
+                                                        <DrivePanel
+                                                            openOptionsDialog={this.handleOpenOptionsDialog}
+                                                            isFocused={this.state.activePart === "left"}
+                                                            partId="left"
+                                                            location={this.state.startLocation.left}
+                                                            onFocusRequest={this.handleFocusRequest}
+                                                        />
+
+                                                    </ReflexElement>
+                                                    <ReflexSplitter />
+                                                    <ReflexElement className="right-pane" minSize="350">
+                                                        <DrivePanel
+                                                            openOptionsDialog={this.handleOpenOptionsDialog}
+                                                            isFocused={this.state.activePart === "right"}
+                                                            partId="right"
+                                                            location={this.state.startLocation.right}
+                                                            onFocusRequest={this.handleFocusRequest}
+                                                        />
+                                                    
+                                                    </ReflexElement>
+                                                </ReflexContainer> 
+                                            </ReflexElement>
+                                        </ReflexContainer>
+                                        
                                 ) : (tab.type == 'fileEdit') ? (
                                     this.state.tabValue === tab.name &&
                                     <FileEditor

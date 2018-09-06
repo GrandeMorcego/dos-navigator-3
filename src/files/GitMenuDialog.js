@@ -47,6 +47,7 @@ export default class GitMenuDialog extends React.Component {
                 <DialogTitle> <span style={{color: '#ffffff'}}>{'Clone project form Git'} </span> </DialogTitle>
                 <DialogContent>
                     <TextField
+                        fullWidth={true}
                         label="SSH or HTTPS..."
                         value={this.state.cloneUrl}
                         onChange={this.handleUrlChange}

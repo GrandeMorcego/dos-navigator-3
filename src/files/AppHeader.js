@@ -33,9 +33,13 @@ export default class AppHeader extends React.Component {
         }
     }
 
+    
+
     handleOpenOptions = event => this.propHandler("openOptions", event);
 
     handleOpenKeyCommands = event => this.propHandler("openKeyCommands", event);
+
+    handleToggleGitPanel = event => this.propHandler("toggleGitPanel", event);
 
     
     render() {
@@ -104,6 +108,7 @@ export default class AppHeader extends React.Component {
                                 <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
                                     <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
                                     <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem>   
+                                    <MenuItem onClick={ this.handleToggleGitPanel }> Toggle Git panel </MenuItem>   
                                 </Menu>
                         </FlexBandItem>
                     </FlexBand>

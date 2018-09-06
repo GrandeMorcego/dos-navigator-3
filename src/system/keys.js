@@ -37,7 +37,9 @@ export default class KeyMapper {
         { key: "Ctrl+p", command: "openOptions", where: "main", when: ""},
         { key: "Meta+p", command: "openOptions", where: "main", when: ""},
         { key: "Meta+t", command: "openGitMenu", where: 'gitPanel', when: ""},      
-        { key: "Ctrl+t", command: "openGitMenu", where: 'gitPanel', when: ""},      
+        { key: "Ctrl+t", command: "openGitMenu", where: 'gitPanel', when: ""},
+        { key: "Meta+e", command: "toggleGitPanel", where: 'main', when: ""},      
+        { key: "Ctrl+e", command: "toggleGitPanel", where: 'main', when: ""},      
 
         { key: "F5", command: "copyFile", where: "filePanel", when: ""},
         { key: "Shift+F5", command: "copyCurrent", where: "filePanel", when: ""},

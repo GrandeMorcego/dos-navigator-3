@@ -32,6 +32,21 @@ export default class GitPanel extends React.Component {
         core.ipc.on('gitPushRepoCallback', this.pushRepoCallback);
     }
 
+    componentWillUnmount() {
+        // core.off('fileIsRepo', this.handleIsRepo);
+        // core.on("keyDown", this.handleKeyDown);
+        // core.ipc.removeListener('getRepoStatusCallback', this.handleRepoStatus);
+        // core.ipc.removeListener('gitPullRepoCallback', this.pullRepoCallback);
+        // core.ipc.removeListener('gitCommitRepoCallback', this.commitRepoCallback);
+        // core.ipc.removeListener('gitPushRepoCallback', this.pushRepoCallback);
+        core.off('fileIsRepo', this.handleIsRepo);
+        core.off("keyDown", this.handleKeyDown);
+        core.ipc.removeListener('getRepoStatusCallback', this.handleRepoStatus);
+        core.ipc.removeListener('gitPullRepoCallback', this.pullRepoCallback);
+        core.ipc.removeListener('gitCommitRepoCallback', this.commitRepoCallback);
+        core.ipc.removeListener('gitPushRepoCallback', this.pushRepoCallback);
+    }
+
     handleKeyDown = () => {
         const cmd = core.keyMapper.mapKeyEvent(event, 'gitPanel');
 
@@ -49,19 +64,16 @@ export default class GitPanel extends React.Component {
     pullRepoCallback = (event, status) => {
         let path = this.state.gitRepo[this.props.activePart].path;
         core.ipc.send('getRepoStatus', path);
-        console.log(path);
     }
 
     commitRepoCallback = (event, status) => {
         let path = this.state.gitRepo[this.props.activePart].path;
         core.ipc.send('getRepoStatus', path);
-        console.log(path);
     }
 
     pushRepoCallback = (event, status) => {
         let path = this.state.gitRepo[this.props.activePart].path;
         core.ipc.send('getRepoStatus', path);
-        console.log(path);
     }
 
     handleOpenGitMenu = () => {
@@ -74,8 +86,6 @@ export default class GitPanel extends React.Component {
         this.state.gitRepo[part] = gitRepo;
         this.setState({partId: part})
         if (gitRepo.isRepo) {
-            console.log('File is repo: ', gitRepo.isRepo);
-            console.log('Current path: ', path);
             core.ipc.send('getRepoStatus', path);
         }
         this.forceUpdate();
@@ -88,13 +98,11 @@ export default class GitPanel extends React.Component {
 
     handlePullClick = () => {
         let { gitRepo, partId } = this.state;
-        console.log(gitRepo[partId]);
         core.ipc.send('gitPullRepo', gitRepo[partId]);
     }
 
     handleCommitClick = () => {
         let { gitRepo, partId, commitMessage } = this.state;
-        // console.log(commitMessage);
         core.ipc.send('gitCommitRepo', gitRepo[partId], commitMessage);
         this.setState({commitMessage: ''});
     }

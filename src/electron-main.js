@@ -118,8 +118,8 @@ switch (os.platform()) {
 }
 
 const getDrives = () => {
-    drivelist.list((error, drives) => {
-        if (error) {
+    drivelist.list((err, drives) => {
+        if (err) {
             mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
         } else {
             mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);

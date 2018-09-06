@@ -24,27 +24,13 @@ export default class MakeDirDialog extends React.Component {
     }
 
     componentDidMount() {
-        core.on("getPanelManager", (event, manager) => {
-            this.setState({manager: manager})
-        })
-        core.ipc.on('createDirectoryCallback', (event, status, path) => {
-            if (status === 'success') {
-                this.setState({
-                    transLocation: this.state.location,
-                    transPath: '',
-                    path: ''
-                })
-                if (this.props.open){
-                    this.props.onClose();
-                }
-            } else {
-                this.setState({pathError: true});
-                this.forceUpdate();
-                if (status.code == "EEXIST") {
-                    core.emit('displayError', 'This directory already exists');     
-                }
-            }
-        })
+        core.on("getPanelManager", this.handlePanelManager);
+        core.ipc.on('createDirectoryCallback', this.handleCreateCallback);
+    }
+
+    componentWillUnmount() {
+        core.off("getPanelManager", this.handlePanelManager);
+        core.ipc.removeListener('createDirectoryCallback', this.handleCreateCallback);
     }
     
     componentWillReceiveProps() {
@@ -57,6 +43,29 @@ export default class MakeDirDialog extends React.Component {
         if (this.state.path != ('' || null)) {
             let event = {target: {value: this.state.path}};
             this.handlePathChange(event);
+        }
+    }
+
+    handlePanelManager = (event, manager) => {
+        this.setState({manager: manager})
+    }
+
+    handleCreateCallback = (event, status, path) => {
+        if (status === 'success') {
+            this.setState({
+                transLocation: this.state.location,
+                transPath: '',
+                path: ''
+            })
+            if (this.props.open){
+                this.props.onClose();
+            }
+        } else {
+            this.setState({pathError: true});
+            this.forceUpdate();
+            if (status.code == "EEXIST") {
+                core.emit('displayError', 'This directory already exists');     
+            }
         }
     }
 
