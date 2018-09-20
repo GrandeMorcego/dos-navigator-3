@@ -12,6 +12,7 @@ export default class GitMenuDialog extends React.Component {
         super(props);
         this.state = {
             cloneUrl: '',
+            repoName: ''
         }
     }
 
@@ -27,17 +28,27 @@ export default class GitMenuDialog extends React.Component {
             this.props.onClose();
         }
     }
+    
+    handleNameChange = (event) => {
+        this.setState({repoName: event.target.value});
+    }
 
     handleUrlChange = (event) => {
         this.setState({cloneUrl: event.target.value})
     }
 
     handleCloneClick = () => {
-        let { cloneUrl } = this.state;
+        let { cloneUrl, repoName } = this.state;
         let path = core.location[this.props.activePart].path;
-        let splittedUrl = cloneUrl.replace(".git", "").split('/');
+
+        core.ipc.send("gitCloneRepo", cloneUrl, path, repoName);
+    }
+
+    handleUrlPaste = (event, something) => {
+        let pasting = event.clipboardData.getData("Text");
+        let splittedUrl = pasting.replace(".git", "").split('/');
         let name = splittedUrl[splittedUrl.length - 1];
-        core.ipc.send("gitCloneRepo", cloneUrl, path, name);
+        this.setState({repoName: name});
     }
 
     render() {
@@ -46,10 +57,17 @@ export default class GitMenuDialog extends React.Component {
             <Dialog open={this.props.open} onClose={this.props.onClose}>
                 <DialogTitle> <span style={{color: '#ffffff'}}>{'Clone project form Git'} </span> </DialogTitle>
                 <DialogContent>
+                <TextField
+                        fullWidth={true}
+                        label="Name"
+                        value={this.state.repoName}
+                        onChange={this.handleNameChange}
+                    />
                     <TextField
                         fullWidth={true}
                         label="SSH or HTTPS..."
                         value={this.state.cloneUrl}
+                        onPaste={this.handleUrlPaste}
                         onChange={this.handleUrlChange}
                     />
                 </DialogContent>

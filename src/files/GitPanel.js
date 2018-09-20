@@ -7,6 +7,7 @@ import { Done, ArrowUpward, ArrowDownward } from '@material-ui/icons';
 import core from '../system/core';
 import FlexBand, { FlexBandItem } from 'flexband';
 import GitMenuDialog from './GitMenuDialog';
+import ChangeBranchDialog from './ChangeBranchDialog';
 
 export default class GitPanel extends React.Component {
     constructor(props) {
@@ -19,7 +20,12 @@ export default class GitPanel extends React.Component {
             partId: '',
             commitMessage: '',
             isFocused: false,
-            openGitMenu: false,
+            open: {
+                openGitMenu: false,
+                openChangeBranchDialog: false,
+            },
+            repoBranches: null,
+            currentBranch: ''
         }
     }
 
@@ -30,21 +36,17 @@ export default class GitPanel extends React.Component {
         core.ipc.on('gitPullRepoCallback', this.pullRepoCallback);
         core.ipc.on('gitCommitRepoCallback', this.commitRepoCallback);
         core.ipc.on('gitPushRepoCallback', this.pushRepoCallback);
+        core.ipc.on('gitGetBranchesCallback', this.getBranchesCallback);
     }
 
     componentWillUnmount() {
-        // core.off('fileIsRepo', this.handleIsRepo);
-        // core.on("keyDown", this.handleKeyDown);
-        // core.ipc.removeListener('getRepoStatusCallback', this.handleRepoStatus);
-        // core.ipc.removeListener('gitPullRepoCallback', this.pullRepoCallback);
-        // core.ipc.removeListener('gitCommitRepoCallback', this.commitRepoCallback);
-        // core.ipc.removeListener('gitPushRepoCallback', this.pushRepoCallback);
         core.off('fileIsRepo', this.handleIsRepo);
         core.off("keyDown", this.handleKeyDown);
         core.ipc.removeListener('getRepoStatusCallback', this.handleRepoStatus);
         core.ipc.removeListener('gitPullRepoCallback', this.pullRepoCallback);
         core.ipc.removeListener('gitCommitRepoCallback', this.commitRepoCallback);
         core.ipc.removeListener('gitPushRepoCallback', this.pushRepoCallback);
+        core.ipc.removeListener('gitGetBranchesCallback', this.getBranchesCallback);
     }
 
     handleKeyDown = () => {
@@ -53,11 +55,20 @@ export default class GitPanel extends React.Component {
         if (cmd) {
             switch(cmd.command) {
                 case "openGitMenu":
-                    this.handleOpenGitMenu();
+                    this.handleOpenDialog("openGitMenu");
                     break;
                 default:
                     console.log("There is no action assigned on this key combination")
             }
+        }
+    }
+
+    getBranchesCallback = (event, status, data) => {
+        if (status != "ERR") {
+            this.setState({repoBranches: data})
+            console.log(data);
+        } else {
+            console.log('ERR: ', data);
         }
     }
 
@@ -93,6 +104,7 @@ export default class GitPanel extends React.Component {
 
     handleRepoStatus = (event, status) => {
         this.state.gitRepo[this.state.partId].status = status;
+        this.setState({currentBranch: status.current});
         this.forceUpdate();
     }
 
@@ -117,8 +129,25 @@ export default class GitPanel extends React.Component {
         this.setState({commitMessage: value});
     }
 
+    handleChangeBranchClick = (event) => {
+        // event.preventDefault();
+        let { gitRepo, partId, openChangeBranchDialog } = this.state;
+        core.ipc.send("gitGetBranches", gitRepo[partId])
+        this.handleOpenDialog("openChangeBranchDialog")
+        // core.dialogOpened = true;
+    }
+
+    handleOpenDialog = (dialog) => {
+        if (dialog) {
+            this.state.open[dialog] = !this.state.open[dialog];
+            core.dialogOpened = !core.dialogOpened;
+            this.forceUpdate();
+        } 
+    }
+
     render() {
-        let { gitRepo, commitMessage, openGitMenu } = this.state;
+        let { gitRepo, commitMessage, openGitMenu, open, repoBranches,
+        currentBranch } = this.state;
         let { activePart } = this.props;
         let currentRepo = gitRepo[activePart];
 
@@ -127,7 +156,7 @@ export default class GitPanel extends React.Component {
                 {
                     (currentRepo.isRepo && currentRepo.status)? (
                         <div>
-                            <Typography> Current branch: {currentRepo.status.current} </Typography> 
+                            <Typography> Current branch: <span onClick={this.handleChangeBranchClick} className="repo-branch">{currentRepo.status.current}</span> </Typography> 
                             {currentRepo.status.behind}
                             <IconButton style={{width: '16', height: '16'}}>
                                 <ArrowDownward
@@ -197,9 +226,16 @@ export default class GitPanel extends React.Component {
                     ): 'File isnt a repo'
                 }
                 <GitMenuDialog 
-                    open={openGitMenu}
-                    onClose={this.handleOpenGitMenu}
+                    open={open.openGitMenu}
+                    onClose={() => {this.handleOpenDialog("openGitMenu")}}
                     activePart={activePart}
+                />
+                <ChangeBranchDialog
+                    open={open.openChangeBranchDialog}
+                    onClose={() => {this.handleOpenDialog("openChangeBranchDialog")}}
+                    branches={repoBranches}
+                    currentBranch={currentBranch}
+                    repo={currentRepo}
                 />
             </div>
         );

@@ -426,7 +426,7 @@ ipcMain.on("needFiles", (event, data) => {
         }
 
         simpleGit(dir).checkIsRepo().then((isRepo) => {
-            console.log('File is repo ', isRepo);
+            // console.log('File is repo ', isRepo);
             
             mainWindow.webContents.send("getFiles", sender, location, list, {isRepo}, err);
         })
@@ -436,7 +436,7 @@ ipcMain.on("needFiles", (event, data) => {
 
 ipcMain.on('getRepoStatus', (event, dir) => {
     simpleGit(dir).status().then((status) => {
-        console.log(status);
+        // console.log(status);
         mainWindow.webContents.send("getRepoStatusCallback", status);
     });
 })
@@ -490,6 +490,24 @@ ipcMain.on('gitCloneRepo', (event, repoPath, dir, name) => {
     }).catch((err) => {
         console.log(err);
         mainWindow.webContents.send("gitCloneRepoCallback", err, true);
+    })
+});
+
+ipcMain.on('gitGetBranches', (event, repo) => {
+    simpleGit(repo.path).branch().then((branch) => {
+        mainWindow.webContents.send("gitGetBranchesCallback", "SUCCESS", branch);
+    }).catch(err => {
+        mainWindow.webContents.send("gitGetBranchesCallback", "ERR", err);
+    });
+});
+
+ipcMain.on('gitCheckoutBranch', (event, repo, branch) => {
+    simpleGit(repo.path).checkout(["-q", branch]).then((status) => {
+        console.log(status);
+        mainWindow.webContents.send("gitCheckoutBranchCallback", "SUCCESS", status);
+    }).catch(err => {
+        console.log(err);
+        mainWindow.webContents.send("gitCheckoutBranchCallback", "ERR", err);
     })
 })
 

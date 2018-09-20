@@ -356,6 +356,7 @@ class Main extends Component {
 
     toggleGitPanel = () => {
         this.setState({openGitPanel: !this.state.openGitPanel});
+        console.log('I am here');
         this.forceUpdate();
     }
 
@@ -376,6 +377,7 @@ class Main extends Component {
     }
 
     handleOpenOptionsDialog = () => {
+        core.dialogOpened = !core.dialogOpened;
         this.setState({openOptionsDialog: !this.state.openOptionsDialog});
     }
 
@@ -527,9 +529,9 @@ class Main extends Component {
                                                 />
                                             
                                             </ReflexElement>
-                                            {/* {openGitPanel? 
+                                            {openGitPanel? 
                                                 <ReflexSplitter />
-                                             : null} */}
+                                             : null}
                                             
                                             <ReflexElement className={"right-pane"}>
                                                 <ReflexContainer key={index} orientation="vertical">

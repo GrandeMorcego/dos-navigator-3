@@ -21,13 +21,6 @@ export default class ChangeDriveDialog extends React.Component {
         }
     }
 
-    componentDidMount() {
-    }
-
-    componentWillUnmount() {
-
-    }
-
     handleDriveChange = (event) => {
         this.setState({drive: event.target.value});
     }
