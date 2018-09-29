@@ -93,7 +93,7 @@ export default class DrivePanel extends Component {
     handleKeyDown = () => {
         if (this.props.isFocused) {
             const cmd = core.keyMapper.mapKeyEvent(event, 'drivePanel');
-            console.log(cmd);
+            // console.log(cmd);
             if (cmd) {
                 switch (cmd.command) {
                     case 'makeDir':

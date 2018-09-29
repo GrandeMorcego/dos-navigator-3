@@ -13,6 +13,7 @@ import Lua from '../../icons/languages/lua.svg';
 import Php from '../../icons/languages/php.svg';
 import Archive from '../../icons/zip-box.svg';
 import Executable from '../../icons/executable.svg';
+import HTML from '../../icons/languages/html.svg';
 
 
 export default class IconManager extends React.Component {
@@ -39,6 +40,7 @@ export default class IconManager extends React.Component {
             ".XZ": Archive,
             ".GZ": Archive,
             ".7Z": Archive,
+            ".HTML": HTML
 
         }
     }

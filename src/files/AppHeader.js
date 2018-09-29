@@ -1,7 +1,11 @@
+// Node JS imports
 import React, {Component} from 'react';
 import { Tabs, Tab, IconButton, Tooltip, Popper, Paper, Grow, MenuList, MenuItem, ClickAwayListener, Menu } from '@material-ui/core';
 import { Close, MoreVert, CloudDownload } from '@material-ui/icons';
 import FlexBand, { FlexBandItem } from 'flexband'
+
+// JS Files imports
+import core from '../system/core';
 
 
 const tabHeight = 36;
@@ -13,6 +17,14 @@ export default class AppHeader extends React.Component {
             menuOpen: false,
             itemMenu: null
         }
+    }
+
+    componentDidMount() {
+        core.on('updateHeader', () => this.forceUpdate());
+    }
+
+    componentWillUnmount() {
+        core.off('updateHeader', () => this.forceUpdate());
     }
 
     handleCloseClick(tabName, tabPath, tabType) {
@@ -37,9 +49,13 @@ export default class AppHeader extends React.Component {
 
     handleOpenKeyCommands = event => this.propHandler("openKeyCommands", event);
 
+    handleGoogleLogIn = event => this.propHandler("googleLogIn", event);
+
+    handleOpenGoogleAccountDialog = event => this.propHandler("openGoogleAccountDialog", event);
+
     
     render() {
-
+        let googleCredentials = JSON.parse(localStorage.getItem("googleCredentials"));
         return (
             <FlexBand wrap="nowrap" style={{height: tabHeight}} >
                 <FlexBandItem style={{ width: '90%'}}>
@@ -103,7 +119,10 @@ export default class AppHeader extends React.Component {
                             </Tooltip>
                                 <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
                                     <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
-                                    <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem>   
+                                    <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem> 
+                                    {(googleCredentials && googleCredentials.displayName)?
+                                        <MenuItem onClick={ this.handleOpenGoogleAccountDialog }> {googleCredentials.displayName} </MenuItem>:
+                                        <MenuItem onClick={  this.handleGoogleLogIn }> Log in to Google </MenuItem>}
                                 </Menu>
                         </FlexBandItem>
                     </FlexBand>

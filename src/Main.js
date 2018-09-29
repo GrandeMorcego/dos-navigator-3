@@ -20,6 +20,7 @@ import CloseConfirmDialog from './files/CloseConfirmDialog';
 import AppHeader from './files/AppHeader';
 import ChangeDriveDialog from './files/ChangeDriveDialog';
 import KeyCommandsDialog from './files/KeyCommandsDialog';
+import GoogleAccountDialog from './files/GoogleAccountDialog';
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -110,7 +111,7 @@ const muiTheme = createMuiTheme({
             }
         }
     }
-})
+});
 
 class Main extends Component {
     constructor(props, context) {
@@ -132,6 +133,7 @@ class Main extends Component {
             terminalOn: false,
             openCloseConfirmDialog: false,
             openKeyCommandsDialog: false,
+            openGoogleAccountDialog: false,
             isClosing: {},
             nextTerminalId: 1,
             startLocation: core.location,
@@ -149,6 +151,10 @@ class Main extends Component {
 
     componentDidMount() {
         core.ipc.send('getDrives');
+        // let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        // if (credentials) {
+        //     core.ipc.send('setToken', credentials.idToken);
+        // }
         window.addEventListener("keydown", this.handleKeyDown);
         window.addEventListener("keyup", this.handleKeyUp);
         window.addEventListener("keypress", this.handleKeyPress);
@@ -163,6 +169,8 @@ class Main extends Component {
         core.on('displayError', this.handleOpenErrorSnackbar);
         core.on('openDrives', this.handleDrivesClick);
         core.ipc.on('getDrivesCallback', this.handleGetFiles);
+        core.ipc.on('googleLogInCallback', this.handleGoogleLogInCallback);
+        core.ipc.on('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
         let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
         if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
             core.location = defaultPath;
@@ -181,8 +189,27 @@ class Main extends Component {
         core.off('execBashFile', this.fileExecBash);
         core.off('displayError', this.handleOpenErrorSnackbar);
         core.off('openDrives', this.handleDrivesClick);
-        core.ipc.removeListener('getDrivesCallback', this.handleGetFiles);       
+        core.ipc.removeListener('getDrivesCallback', this.handleGetFiles);  
+        core.ipc.removeListener('googleLogInCallback', this.handleGoogleLogInCallback);     
+        core.ipc.removeListener('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
 
+    }
+
+    handleUpdateGoogleCredentials = (event, tokens) => {
+        let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+
+        credentials.tokens = tokens;
+
+        localStorage.setItem("googleCredentials", JSON.stringify(credentials));
+    }
+
+    handleGoogleLogInCallback = (event, status, data) => {
+        if (status != 'ERR') {
+            localStorage.setItem("googleCredentials", JSON.stringify(data));
+            core.emit('updateHeader');
+        } else {
+            core.emit('displayError', 'Log in attemt has failed');
+        }
     }
 
     handleGetFiles = (event, status, data) => {
@@ -381,6 +408,10 @@ class Main extends Component {
         })
     }
 
+    handleGoogleLogIn = () => {
+        core.ipc.send("googleLogIn");
+    }
+
     closeTab = (fileName) => {
         this.state.tabs.forEach((tab, index)=> {
             if (tab.name == fileName) {
@@ -418,7 +449,11 @@ class Main extends Component {
     handleOpenKeyCommands = () => {
         this.setState({openKeyCommandsDialog: !this.state.openKeyCommandsDialog});
     }
-    
+
+    handleOpenGoogleAccountDialog = () => {
+        this.setState({openGoogleAccountDialog: !this.state.openGoogleAccountDialog});
+    }    
+
     render() {
         const sflStyle = {      
             height: "100%",
@@ -427,6 +462,8 @@ class Main extends Component {
             backgroundColor: "#37474F",
             color: "#E8EAF6",
         };
+
+        let { openGoogleAccountDialog } = this.state;
 
         return (
 	        <MuiThemeProvider theme={muiTheme} >
@@ -490,6 +527,10 @@ class Main extends Component {
                         open={this.state.openCloseConfirmDialog}
                         file={this.state.isClosing}
                     />
+                    <GoogleAccountDialog
+                        open={openGoogleAccountDialog}
+                        onClose={this.handleOpenGoogleAccountDialog}
+                    />
                     <AppHeader 
                         tabs={this.state.tabs}
                         tabValue={this.state.tabValue}
@@ -497,6 +538,8 @@ class Main extends Component {
                         onCloseClick={this.handleCloseClick}
                         openOptions={this.handleOpenOptionsDialog}
                         openKeyCommands={this.handleOpenKeyCommands}
+                        googleLogIn={this.handleGoogleLogIn}
+                        openGoogleAccountDialog={this.handleOpenGoogleAccountDialog}
                     />
                     <div style={{height: window.innerHeight-tabHeight}}>
                         {this.state.tabs.map((tab, index) => {

@@ -126,15 +126,25 @@ export default class FilePanelManager extends ObservedObject {
      * 
      */
     readFiles(addToPath, fromHomeDir){
-        if (this.driveHandler) {
-            this.driveHandler.getFiles({
-                sender: this.panelId,
-                location: {
-                    ...this.location, 
-                    addToPath: addToPath,
-                }
-            }, this.handleGetFiles, fromHomeDir);
+        if (addToPath != 'googleDrive') {
+            if (this.driveHandler) {
+                this.driveHandler.getFiles({
+                    sender: this.panelId,
+                    location: {
+                        ...this.location, 
+                        addToPath: addToPath,
+                    }
+                }, this.handleGetFiles, fromHomeDir);
+            }
+        } else {
+            let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+            console.log(credentials)
+            core.ipc.send("openDrive", credentials);
+            core.ipc.once("openDriveCallback", (event, files) => {
+                console.log(files);
+            })
         }
+        
 
         // core.ipc.removeListener("getFiles", this.handleGetFiles);        
     }
