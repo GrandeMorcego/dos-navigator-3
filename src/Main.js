@@ -150,6 +150,7 @@ class Main extends Component {
     }
 
     componentDidMount() {
+        console.log(core.location);
         core.ipc.send('getDrives');
         // let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
         // if (credentials) {
@@ -168,6 +169,7 @@ class Main extends Component {
         core.on('execBashFile', this.fileExecBash);
         core.on('displayError', this.handleOpenErrorSnackbar);
         core.on('openDrives', this.handleDrivesClick);
+        core.on('handleChangeDrive', this.handleChangeDrive);
         core.ipc.on('getDrivesCallback', this.handleGetFiles);
         core.ipc.on('googleLogInCallback', this.handleGoogleLogInCallback);
         core.ipc.on('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
@@ -193,6 +195,10 @@ class Main extends Component {
         core.ipc.removeListener('googleLogInCallback', this.handleGoogleLogInCallback);     
         core.ipc.removeListener('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
 
+    }
+
+    handleChangeDrive = (event, drive) => {
+        
     }
 
     handleUpdateGoogleCredentials = (event, tokens) => {

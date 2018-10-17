@@ -188,8 +188,8 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.67.tgz#3aeacf429e24e08e14d7621039d37b7f53542ecf"
 
 "@types/node@^8.0.24":
-  version "8.10.30"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.30.tgz#2c82cbed5f79d72280c131d2acffa88fbd8dd353"
+  version "8.10.36"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.36.tgz#eac05d576fbcd0b4ea3c912dc58c20475c08d9e4"
 
 "@types/react-transition-group@^2.0.8":
   version "2.0.9"
@@ -3226,6 +3226,20 @@ electron-download@^4.0.0:
     semver "^5.3.0"
     sumchecker "^2.0.1"
 
+electron-download@^4.1.0:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/electron-download/-/electron-download-4.1.1.tgz#02e69556705cc456e520f9e035556ed5a015ebe8"
+  dependencies:
+    debug "^3.0.0"
+    env-paths "^1.0.0"
+    fs-extra "^4.0.1"
+    minimist "^1.2.0"
+    nugget "^2.0.1"
+    path-exists "^3.0.0"
+    rc "^1.2.1"
+    semver "^5.4.1"
+    sumchecker "^2.0.2"
+
 electron-forge-template-angular2@^1.0.3:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/electron-forge-template-angular2/-/electron-forge-template-angular2-1.0.6.tgz#c5411ff3732116885bff5fafa5d1728a5809a2b1"
@@ -3508,12 +3522,12 @@ electron@2.0.4:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
-electron@^2.0.5:
-  version "2.0.10"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-2.0.10.tgz#9d7cccd33698e12ecda4d3f585b3bd678a4d4546"
+electron@^3.0.4:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-3.0.4.tgz#9b45a0171ac424d4c134721c9cf2a891b99e80f2"
   dependencies:
     "@types/node" "^8.0.24"
-    electron-download "^3.0.1"
+    electron-download "^4.1.0"
     extract-zip "^1.0.3"
 
 elliptic@^6.0.0:
@@ -7732,8 +7746,8 @@ pseudomap@^1.0.2:
   resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
 
 psl@^1.1.24:
-  version "1.1.28"
-  resolved "https://registry.yarnpkg.com/psl/-/psl-1.1.28.tgz#4fb6ceb08a1e2214d4fd4de0ca22dae13740bc7b"
+  version "1.1.29"
+  resolved "https://registry.yarnpkg.com/psl/-/psl-1.1.29.tgz#60f580d360170bb722a797cc704411e6da850c67"
 
 public-encrypt@^4.0.0:
   version "4.0.2"
@@ -7864,7 +7878,7 @@ raw-body@2.3.2:
     iconv-lite "0.4.19"
     unpipe "1.0.0"
 
-rc@^1.0.1, rc@^1.1.2, rc@^1.1.6, rc@^1.2.7:
+rc@^1.0.1, rc@^1.1.2, rc@^1.1.6, rc@^1.2.1, rc@^1.2.7:
   version "1.2.8"
   resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.8.tgz#cd924bf5200a075b83c188cd6b9e211b7fc0d3ed"
   dependencies:
@@ -8616,8 +8630,8 @@ semver-diff@^2.0.0:
     semver "^5.0.3"
 
 "semver@2 || 3 || 4 || 5", semver@^5.3.0:
-  version "5.5.1"
-  resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.1.tgz#7dfdd8814bdb7cabc7be0fb1d734cfb66c940477"
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
 
 semver@^5.0.3, semver@^5.1.0, semver@^5.4.0, semver@^5.4.1, semver@^5.5.0:
   version "5.5.0"
@@ -8914,15 +8928,15 @@ spawn-sync@^1.0.15:
     os-shim "^0.1.2"
 
 spdx-correct@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/spdx-correct/-/spdx-correct-3.0.1.tgz#434434ff9d1726b4d9f4219d1004813d80639e30"
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/spdx-correct/-/spdx-correct-3.0.2.tgz#19bb409e91b47b1ad54159243f7312a858db3c2e"
   dependencies:
     spdx-expression-parse "^3.0.0"
     spdx-license-ids "^3.0.0"
 
 spdx-exceptions@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/spdx-exceptions/-/spdx-exceptions-2.1.0.tgz#2c7ae61056c714a5b9b9b2b2af7d311ef5c78fe9"
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/spdx-exceptions/-/spdx-exceptions-2.2.0.tgz#2ea450aee74f2a89bfb94519c07fcd6f41322977"
 
 spdx-expression-parse@^3.0.0:
   version "3.0.0"
@@ -8973,18 +8987,17 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
 
 sshpk@^1.7.0:
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.14.2.tgz#c6fc61648a3d9c4e764fd3fcdf4ea105e492ba98"
+  version "1.15.1"
+  resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.15.1.tgz#b79a089a732e346c6e0714830f36285cd38191a2"
   dependencies:
     asn1 "~0.2.3"
     assert-plus "^1.0.0"
-    dashdash "^1.12.0"
-    getpass "^0.1.1"
-    safer-buffer "^2.0.2"
-  optionalDependencies:
     bcrypt-pbkdf "^1.0.0"
+    dashdash "^1.12.0"
     ecc-jsbn "~0.1.1"
+    getpass "^0.1.1"
     jsbn "~0.1.0"
+    safer-buffer "^2.0.2"
     tweetnacl "~0.14.0"
 
 ssri@^5.2.4:

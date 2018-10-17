@@ -33,9 +33,17 @@ export default class ChangeDriveDialog extends React.Component {
     }
 
     handleChangeClick = () => {
+        let { drive } = this.state;
+        let { activePart } = this.props;
         this.props.onClose();
-        core.location[this.props.activePart].disk = this.state.drive;
-        core.emit('driveChanged', this.props.activePart);
+        core.location[activePart].disk = drive;
+        console.log('DRIVE ==>> ', core.location[activePart].drive);
+        if (drive != 'googleDrive') {
+            core.location[activePart].drive = 'files'
+        } else {
+            core.location[activePart].drive = drive
+        }
+        core.emit('driveChanged', activePart);
     }
 
     compareDrives = (drive1, drive2) => {
@@ -98,7 +106,7 @@ export default class ChangeDriveDialog extends React.Component {
                                 key={ 'gdrive' }
                                 value={ 'googleDrive' }
                                 control={ <Radio color="default"/> }
-                                label={ 'Google drive' }
+                                label={ 'Google Drive' }
                             />
                         </RadioGroup>
                     </FormControl>

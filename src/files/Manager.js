@@ -77,7 +77,7 @@ export default class FilePanelManager extends ObservedObject {
                 if (status != 'ERR') {
                     core.emit('gotFileContent', data, file, this.location.path);
                 } else {
-                    console.log("ERRIPC: ", data);
+                    core.emit('displayError', 'Some error has occured while reading this file');
                 }
             });
             
@@ -123,10 +123,11 @@ export default class FilePanelManager extends ObservedObject {
     /** Reads file list in the current location with possible addition 
      * 
      * @param addToPath can be either a sub-path to the current location's path or ".." for parent directory 
-     * 
+     * @param {boolean} fromHomeDir read files from the root of the specified drive
      */
-    readFiles(addToPath, fromHomeDir){
-        if (addToPath != 'googleDrive') {
+    readFiles(addToPath, fromHomeDir, ){
+        console.log(addToPath);
+        // if (addToPath != 'googleDrive') {
             if (this.driveHandler) {
                 this.driveHandler.getFiles({
                     sender: this.panelId,
@@ -136,14 +137,16 @@ export default class FilePanelManager extends ObservedObject {
                     }
                 }, this.handleGetFiles, fromHomeDir);
             }
-        } else {
-            let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
-            console.log(credentials)
-            core.ipc.send("openDrive", credentials);
-            core.ipc.once("openDriveCallback", (event, files) => {
-                console.log(files);
-            })
-        }
+        // } else {
+        //     let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        //     console.log(credentials)
+        //     core.ipc.send("openDrive", credentials);
+        //     core.ipc.once("openDriveCallback", (event, files) => {
+        //         console.log(files);
+        //         this.handleGetFiles({drive: 'googleDrive', path: "Google Drive:/root"}, files);
+        //         console.log(core.location);
+        //     })
+        // }
         
 
         // core.ipc.removeListener("getFiles", this.handleGetFiles);        
@@ -293,6 +296,8 @@ export default class FilePanelManager extends ObservedObject {
         };
 
         this.selectedCount = 0;
+
+        console.log("In MANAGER ====>>",files);
         
         this.emit("files", { files: this.files, location: this.location, prevSubPath: location.previousSubPath } );
     }
@@ -382,11 +387,16 @@ export default class FilePanelManager extends ObservedObject {
     }
 
     commandOpenDir = ({ file }) => {
-        this.readFiles(file.name);
+        if (this.location.drive != 'googleDrive') {
+            this.readFiles(file.name);
+        } else {
+            this.readFiles(file.fileId);
+        }
     }
 
-    commandOpenParentDir = () => {
+    commandOpenParentDir = (file) => {
         this.readFiles("..");
+
     }
 
     commandOpenRootDir = () => {

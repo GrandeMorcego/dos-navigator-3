@@ -181,7 +181,6 @@ async function fetchGoogleProfile (accessToken) {
 }
 
 async function refreshGoogleAccessToken (refreshToken) {
-    console.log('refreshAccessToken', refreshToken);
     const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
@@ -203,8 +202,8 @@ async function refreshGoogleAccessToken (refreshToken) {
     return response.data;
 }
 
-async function getGoogleDriveData(credentials) {
-    const accessToken = credentials.tokens.access_token
+async function getGoogleDriveData(accessToken, refreshToken, query) {
+    // const accessToken = credentials.tokens.access_token
 
     const response = await axios.get("https://www.googleapis.com/drive/v3/files", {
         headers: {
@@ -213,17 +212,19 @@ async function getGoogleDriveData(credentials) {
         },
         params: {
             key: GOOGLE_CLIENT_ID,
-            fields: 'files,incompleteSearch,kind,nextPageToken'
+            fields: 'files,incompleteSearch,kind,nextPageToken',
+            q: query,
+            orderBy: 'folder,name',
         }
     }).catch(async err => {
-        console.log(err);
-        const token = await refreshGoogleAccessToken(credentials.tokens.refresh_token);
-        const data = await getGoogleDriveData(token.access_token);
+        const token = await refreshGoogleAccessToken(refreshToken);
+        getGoogleDriveData(token.access_token, token.refresh_token);
     })
 
-    return response.data;
+    if (response) {
+        return response.data;
+    }
 }
-
 
 
 const windowsExeTypes = {
@@ -487,93 +488,173 @@ ipcMain.on('googleLogIn', async (event) => {
     });
 });
 
-ipcMain.on('openDrive', (event, credentials) => {
-    console.log('openDrive');
-    getGoogleDriveData(credentials)
-        .then(response => {
-            let files = iterateFiles(response.files);
+ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir, credentials}) => {
+    const {
+        access_token,
+        refresh_token
+    } = credentials.tokens;
 
-            mainWindow.webContents.send("openDriveCallback", files);
+    let key;
+    
+    console.log('KEY 1: ', access_token)
+
+    if (location.addToPath != '..') {
+        key = fromHomeDir? 'root' : location.addToPath; 
+    } else {
+        let parent = location.path.split('/')
+        let pName = parent[parent.length-1]
+        console.log('KEY 2: ', access_token)
+        key = await getGoogleDriveFile(access_token, refresh_token, 'name', pName);
+    }
+
+    console.log('KEY: ', key);
+    
+    getGoogleDriveData(access_token, refresh_token, `'${key}' in parents`)
+        .then(async response  =>  {
+            let files = reformatGoogleDriveFiles(response.files);
+            let fileName = 'PLACEHOLDER';
+            
+            if (location.addToPath != '..') {
+                if (!fromHomeDir) {
+                    // fileName = await getGoogleDriveFile(access_token, refresh_token, 'id', location.addToPath);
+                }
+                location.path = fromHomeDir? 'Google Drive /root': location.path + `/${fileName}`
+            } else {
+                let parent = location.path.split('/')
+                parent.splice(parent.length-1,);
+                location.path = parent.join('/');
+            }
+            mainWindow.webContents.send("getGDriveFilesCallback", sender, location, files);
         })
         // .catch(async err => {
             
         //     mainWindow.webContents.send("openDriveCallback", data);
         // });
+
 } )
 
-async function getFileData(accessToken, fileId) {
-    const response = await axios.get(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
-        headers: `Bearer ${accessToken}`, 
-    })
-
-    return response.data;
-}
-
-iterateFiles = (files) => {
-    let ids = {}
-
-    files.forEach(file => {
-        if (file.mimeType == 'application/vnd.google-apps.folder') {
-            // const fileParent = await getFileData
-            ids[file.id] = {
-                children: [],
-                parentId: ((file.parents && file.parents[0])? file.parents[0]:null),
-                file: file
-            };
-            console.log(ids[file.id]);
-        }
-        
-    })
-
-    // console.log(ids);
-
-    files.forEach((file, id) => {
-        if (file.parents && file.parents[0] && file.mimeType != 'application/vnd.google-apps.folder') {
-            let parentFile = ids[file.parents[0]];
-            if (parentFile) {
-                // console.log(parentFile.childer)
-
-                parentFile.children.push(file);
-                files.splice(id, 1);
+getGoogleDriveFile = async (accessToken, refreshToken, entity, file) => {
+    let response;
+    let fileFinal;
+    if (entity == 'id') {
+        response = await axios.get(`https://www.googleapis.com/drive/v3/files/${file}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            params: {
+                key: GOOGLE_CLIENT_ID,
             }
+        }).catch(async err => {
+            console.log('ERROR IN files.get');
+            const token = await refreshGoogleAccessToken(refreshToken);
+            getGoogleDriveFile(token.access_token, token.refresh_token, 'id', file);
+        });
+        
+        if (response) {
+            fileFinal = response.data.name;
         }
+    } else if (entity == 'name') {
+        response = await getGoogleDriveData(accessToken, refreshToken, `name='${file}'`);
+
+        console.log('DONE')
+
+        console.log('FILES: ', response.files);
+
+        fileFinal = response.files[0].parents[0];
+    }
+     
+
+    return fileFinal
+}
+
+reformatGoogleDriveFiles = (filesList) => {
+    let reFiles = [];
+
+    filesList.forEach((file, id) => {
+        let reFile = {
+            name: file.name,
+            parentId: file.parents[0],
+            createTime: file.createdFile,
+            isDir: (file.mimeType == 'application/vnd.google-apps.folder')? true : false,
+            ext: (file.fileExtension)? '.' + file.fileExtension.toUpperCase():null,
+            modifiedTime: file.modifiedTime,
+            openTime: file.viewedByMe,
+            size: (file.size)?file.size:null,
+            fileId: file.id
+        }
+
+        reFiles.push(reFile);
     })
 
-    let finallyFiles = [];
+    return reFiles;
+}
 
-    let pFiles = iterateParentFiles(ids);
+// iterateFiles = (files) => {
+//     let ids = {}
+
+//     files.forEach(file => {
+//         if (file.mimeType == 'application/vnd.google-apps.folder') {
+//             // const fileParent = await getFileData
+//             ids[file.id] = {
+//                 children: [],
+//                 parentId: ((file.parents && file.parents[0])? file.parents[0]:null),
+//                 file: file
+//             };
+//             console.log(ids[file.id]);
+//         }
+        
+//     })
+
+//     // console.log(ids);
+
+//     files.forEach((file, id) => {
+//         if (file.parents && file.parents[0] && file.mimeType != 'application/vnd.google-apps.folder') {
+//             let parentFile = ids[file.parents[0]];
+//             if (parentFile) {
+//                 // console.log(parentFile.childer)
+
+//                 parentFile.children.push(file);
+//                 files.splice(id, 1);
+//             }
+//         }
+//     })
+
+//     let finallyFiles = [];
+
+//     let pFiles = iterateParentFiles(ids);
 
 
 
-    for (let file in pFiles) {
-        if (pFiles[file] != null) {
-            console.log("I'm broking here: finallyFiles")
-            finallyFiles.push(pFiles[file]);
-        }
-    }
+//     for (let file in pFiles) {
+//         if (pFiles[file] != null) {
+//             console.log("I'm broking here: finallyFiles")
+//             finallyFiles.push(pFiles[file]);
+//         }
+//     }
 
-    finallyFiles.concat(files);
+//     finallyFiles.concat(files);
     
-    return finallyFiles;
-}
+//     return finallyFiles;
+// }
 
-iterateParentFiles = (files) => {
-    let forDeleting = [];
-    for (let file in files) {
-        let fFile = files[files[file].parentId];
-        if (fFile) {
-            // fFile.children.push(files[file]);
-            console.log("I'm broking here: iterateParentFiles")
-            forDeleting.push(file);
-        } 
-    }
+// iterateParentFiles = (files) => {
+//     let forDeleting = [];
+//     for (let file in files) {
+//         let fFile = files[files[file].parentId];
+//         if (fFile) {
+//             // fFile.children.push(files[file]);
+//             console.log("I'm broking here: iterateParentFiles")
+//             forDeleting.push(file);
+//         } 
+//     }
 
-    forDeleting.forEach(file => {
-        files[file] = null;
-    })
+//     forDeleting.forEach(file => {
+//         files[file] = null;
+//     })
 
-    return files;
-}
+//     return files;
+// }
 
 ipcMain.on("needFiles", (event, data) => {
     const {
@@ -692,6 +773,7 @@ ipcMain.on("needFiles", (event, data) => {
     } );
 
 } );
+
 
 // expApp.get("/test", (req, res) => {
 //     res.send('Express is open');
