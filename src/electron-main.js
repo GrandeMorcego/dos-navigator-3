@@ -218,7 +218,8 @@ async function getGoogleDriveData(accessToken, refreshToken, query) {
         }
     }).catch(async err => {
         const token = await refreshGoogleAccessToken(refreshToken);
-        getGoogleDriveData(token.access_token, token.refresh_token);
+        const data = await getGoogleDriveData(token.access_token, token.refresh_token);
+        return data;
     })
 
     if (response) {
@@ -376,16 +377,21 @@ ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
     });
 })
 
-ipcMain.on('deleteFiles', (event, files, path) => {
+ipcMain.on('deleteFiles', (event, files, location) => {
     console.log(files);
-    for (let i=0; i<files.length; i++) {
-        let dir = path + '/' + files[i];
-        trash(dir).then(() => {
-            mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
-        }).catch((err) => {
-            mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
-        })
-    }
+    if (location.drive == "files") {
+        for (let i=0; i<files.length; i++) {
+            let dir = location.path + '/' + files[i].name;
+            trash(dir).then(() => {
+                mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
+            }).catch((err) => {
+                mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
+            })
+        }
+    } //else if (location.drive == "googleDrive") {
+        //axios.delete
+    //}
+    
 
 })
 
@@ -496,15 +502,11 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir, cred
 
     let key;
     
-    console.log('KEY 1: ', access_token)
-
     if (location.addToPath != '..') {
         key = fromHomeDir? 'root' : location.addToPath; 
     } else {
-        let parent = location.path.split('/')
-        let pName = parent[parent.length-1]
-        console.log('KEY 2: ', access_token)
-        key = await getGoogleDriveFile(access_token, refresh_token, 'name', pName);
+        let parent = location.realPath.split('/')
+        key = parent[parent.length-2]
     }
 
     console.log('KEY: ', key);
@@ -512,17 +514,17 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir, cred
     getGoogleDriveData(access_token, refresh_token, `'${key}' in parents`)
         .then(async response  =>  {
             let files = reformatGoogleDriveFiles(response.files);
-            let fileName = 'PLACEHOLDER';
             
             if (location.addToPath != '..') {
-                if (!fromHomeDir) {
-                    // fileName = await getGoogleDriveFile(access_token, refresh_token, 'id', location.addToPath);
-                }
-                location.path = fromHomeDir? 'Google Drive /root': location.path + `/${fileName}`
+                location.path = fromHomeDir? 'Google Drive /root': location.path + `/${location.fileName}`
+                location.realPath = fromHomeDir? 'root': location.realPath + `/${key}`
             } else {
                 let parent = location.path.split('/')
                 parent.splice(parent.length-1,);
                 location.path = parent.join('/');
+                let rParent = location.realPath.split('/')
+                rParent.splice(rParent.length-1,);
+                location.realPath = rParent.join('/');
             }
             mainWindow.webContents.send("getGDriveFilesCallback", sender, location, files);
         })

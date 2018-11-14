@@ -125,7 +125,7 @@ export default class FilePanelManager extends ObservedObject {
      * @param addToPath can be either a sub-path to the current location's path or ".." for parent directory 
      * @param {boolean} fromHomeDir read files from the root of the specified drive
      */
-    readFiles(addToPath, fromHomeDir, ){
+    readFiles(addToPath, fromHomeDir, fileName){
         console.log(addToPath);
         // if (addToPath != 'googleDrive') {
             if (this.driveHandler) {
@@ -134,6 +134,7 @@ export default class FilePanelManager extends ObservedObject {
                     location: {
                         ...this.location, 
                         addToPath: addToPath,
+                        fileName: fileName
                     }
                 }, this.handleGetFiles, fromHomeDir);
             }
@@ -156,7 +157,7 @@ export default class FilePanelManager extends ObservedObject {
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
         if (deletingFiles == 'NOCHECK' || isRClick) {
-            deletingFiles = [file.name];
+            deletingFiles = [file];
         }
         core.emit('deletingFiles', deletingFiles, this.panelId, isRClick);
     }
@@ -293,6 +294,7 @@ export default class FilePanelManager extends ObservedObject {
         this.location = { 
             drive: location.drive,  
             path: location.path,
+            realPath: location.realPath
         };
 
         this.selectedCount = 0;
@@ -390,7 +392,7 @@ export default class FilePanelManager extends ObservedObject {
         if (this.location.drive != 'googleDrive') {
             this.readFiles(file.name);
         } else {
-            this.readFiles(file.fileId);
+            this.readFiles(file.fileId, false, file.name);
         }
     }
 
@@ -492,7 +494,7 @@ export default class FilePanelManager extends ObservedObject {
         let checkedFiles = [];
         for (let i=0; i<files.length; i++) {
             if (files[i].selected) {
-                checkedFiles.push(files[i].name);
+                checkedFiles.push(files[i]);
             }
         }
         if (checkedFiles[0]){

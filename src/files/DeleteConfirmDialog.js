@@ -43,7 +43,7 @@ export default class DeleteConfirmDialog extends React.Component {
         if (this.state.perm) {
             core.ipc.send("deleteFilesPerm", this.state.files, core.location[this.props.panelName].path)
         } else {
-            core.ipc.send("deleteFiles", this.state.files, core.location[this.props.panelName].path)
+            core.ipc.send("deleteFiles", this.state.files, core.location[this.props.panelName])
         }
     }
 
@@ -63,20 +63,24 @@ export default class DeleteConfirmDialog extends React.Component {
                     {
                         this.state.files.map((file, id) => {
                             return (
-                                <Typography key={file}>{file}</Typography>
+                                <Typography key={file.name}>{file.name}</Typography>
                             )
                         })
                     }
-                    <FormControlLabel
-                        
-                        control={
-                            <Checkbox 
-                                checked={this.state.perm} 
-                                onChange={this.handleCheck}
-                            />
-                        }
-                        label="Delete permanently"
-                    />
+                    {
+                        core.location[this.props.panelName].drive != "googleDrive"?
+                            <FormControlLabel
+                            
+                                control={
+                                    <Checkbox 
+                                        checked={this.state.perm} 
+                                        onChange={this.handleCheck}
+                                    />
+                                }
+                                label="Delete permanently"
+                            />:null
+                    }
+                    
                 </DialogContent>
                 <DialogActions>
                     <Button style={{color: '#ffffff',}} onClick={this.props.onClose}> Cancel </Button>
