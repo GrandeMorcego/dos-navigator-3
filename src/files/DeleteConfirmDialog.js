@@ -12,6 +12,7 @@ export default class DeleteConfirmDialog extends React.Component {
         this.state = {
             files: [],
             perm: false,
+            manager: null
         }
     }
 
@@ -32,8 +33,11 @@ export default class DeleteConfirmDialog extends React.Component {
         })
     }
 
-    handleDeleteItems = (event, files, panelId, rClickAction) => {
-        this.setState({files: files});
+    handleDeleteItems = (event, files, panelId, rClickAction, manager) => {
+        this.setState({
+            files: files,
+            manager: manager
+        });
         if (rClickAction && this.props.panelId == panelId) {
             this.props.onClose();
         }
@@ -42,6 +46,11 @@ export default class DeleteConfirmDialog extends React.Component {
     handleDeleteClick = () => {
         console.log(this.state.perm);
         let location = core.location[this.props.panelName];
+        let { manager, perm, files } = this.state;
+
+        if (manager) {
+            manager.deleteFiles(files, perm)
+        }
         
         if (this.state.perm) {
             core.ipc.send("deleteFilesPerm", this.state.files, location.path)

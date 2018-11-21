@@ -165,7 +165,7 @@ class SimpleFileLine extends Component {
                     <MenuItem> RenMov </MenuItem>
                     <MenuItem onClick={
                         (() => {
-                            file.manager.deleteFiles(file, true);
+                            file.manager.handleDeleteFiles(file, true);
                             this.setState({rightClickMenuOpen: false})
                         })
                     }> Delete </MenuItem>
@@ -704,7 +704,7 @@ class SimpleFileListContainer extends Component {
                             break;
                         case "delete":
                             this.props.openActionDialog('deleteConfirmDialog');
-                            this.props.manager.deleteFiles(file);
+                            this.props.manager.handleDeleteFiles(file);
                             break; 
                         case 'changePanelMode':
                             for (let i = 0; i<core.filePanelAvaibleModes.length; i++) {

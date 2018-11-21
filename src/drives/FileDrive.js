@@ -48,6 +48,10 @@ export default class BasicDrive extends ObservedObject {
         
     }
 
+    deleteFiles(files, location, perm) {
+        core.ipc.send("deleteFiles", files, location.path, perm);
+    }
+
 
 }
 

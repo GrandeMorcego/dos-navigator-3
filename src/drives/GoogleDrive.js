@@ -34,4 +34,8 @@ export default class GoogleDrive extends ObservedObject {
         }
         
     }
+
+    deleteFiles(files, location) {
+        core.ipc.send("deleteGDriveFiles", files, location.path);
+    }
 }

@@ -153,7 +153,13 @@ export default class FilePanelManager extends ObservedObject {
         // core.ipc.removeListener("getFiles", this.handleGetFiles);        
     }
 
-    deleteFiles(file, isRClick) {
+    deleteFiles(files, perm) {
+        if (this.driveHandler) {
+            this.driveHandler.deleteFiles(files, this.location, perm);
+        }
+    }
+
+    handleDeleteFiles(file, isRClick) {
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
         if (deletingFiles == 'NOCHECK' || isRClick) {
@@ -162,7 +168,7 @@ export default class FilePanelManager extends ObservedObject {
                 id: file.fileId
             }];
         }
-        core.emit('deletingFiles', deletingFiles, this.panelId, isRClick);
+        core.emit('deletingFiles', deletingFiles, this.panelId, isRClick, this);
     }
 
     filesSelectByColor = (file, action) => {

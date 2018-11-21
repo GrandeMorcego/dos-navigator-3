@@ -407,8 +407,8 @@ ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
     });
 })
 
-ipcMain.on('deleteFiles', (event, files, drive, path) => {
-    if (drive == "files") {
+ipcMain.on('deleteFiles', (event, files, path, perm) => {
+    if (!perm) {
         for (let i=0; i<files.length; i++) {
             let dir = path + '/' + files[i].name;
             trash(dir).then(() => {
@@ -417,43 +417,37 @@ ipcMain.on('deleteFiles', (event, files, drive, path) => {
                 mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
             })
         }
-    } else if (drive == "googleDrive") {
-        deleteDriveFiles = async () => {
-            const credentials = JSON.parse(store.get("googleCredentials"));
-            const {access_token, refresh_token} = credentials.tokens;
-
+    } else {
+        try {
             for (let i=0; i<files.length; i++) {
-                console.log(files[i].id);
-                await deleteGoogleDriveFile(access_token, refresh_token, files[i].id);
+                let dir = path + '/' + files[i];
+                rimraf(dir, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                })
             }
-
-            mainWindow.webContents.send("directoryUpdate", path);
             mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
+        } catch (err) {
+            mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
         }
-        
-        deleteDriveFiles(files)
     }
+        
     
 
 })
 
-ipcMain.on('deleteFilesPerm', (event, files, path) => {
-    console.log(files);
-    try {
-        for (let i=0; i<files.length; i++) {
-            let dir = path + '/' + files[i];
-            rimraf(dir, (err) => {
-                if (err) {
-                    throw err;
-                }
-            })
-        }
-        mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
-    } catch (err) {
-        mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
-    }
-    
+ipcMain.on("deleteGDriveFiles", (event, files, path) => {
+    const credentials = JSON.parse(store.get("googleCredentials"));
+    const {access_token, refresh_token} = credentials.tokens;
 
+    for (let i=0; i<files.length; i++) {
+        console.log(files[i].id);
+        await deleteGoogleDriveFile(access_token, refresh_token, files[i].id);
+    }
+
+    mainWindow.webContents.send("directoryUpdate", path);
+    mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
 })
 
 ipcMain.on('readFileContent', (event, path) => {
