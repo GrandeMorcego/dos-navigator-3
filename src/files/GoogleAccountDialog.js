@@ -20,42 +20,26 @@ export default class GoogleAccountDialog extends React.Component {
         }
     }
 
-    componentDidMount() {
-        // core.ipc.on("openDriveCallback", (event, data) => {
-        //     console.log(data);
-        // })
-    }
-
-    componentWillUnmount() {
-
-    }
-    
-    handleOpenDrive = () => {
-        console.log(JSON.parse(localStorage.getItem("googleCredentials")));
-        let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
-        core.ipc.send("openDrive", credentials);
-    }
-
     handleLogOut = () => {
-        localStorage.removeItem("googleCredentials");
+        core.ipc.send("googleLogOut");
     }
 
     render() {
-        const googleCredentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        const { googleCredentials, open, onClose } = this.props;
 
         return (
             <Dialog
-                open={this.props.open}
-                onClose={this.props.onClose}
+                open={open}
+                onClose={onClose}
             >
                 <DialogTitle> <span style={{color: '#ffffff'}}> {(googleCredentials)?googleCredentials.displayName:null} </span> </DialogTitle>
                 <DialogContent>
                     
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={this.handleOpenDrive}> Open Drive </Button>
+                    {/* <Button onClick={this.handleOpenDrive}> Open Drive </Button> */}
                     <Button onClick={this.handleLogOut}> Log out </Button>
-                    <Button style={{color: '#ffffff',}} onClick={this.props.onClose}> Cancel </Button>
+                    <Button style={{color: '#ffffff',}} onClick={onClose}> Cancel </Button>
                 </DialogActions>
             </Dialog>
         )

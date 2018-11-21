@@ -157,7 +157,10 @@ export default class FilePanelManager extends ObservedObject {
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
         if (deletingFiles == 'NOCHECK' || isRClick) {
-            deletingFiles = [file];
+            deletingFiles = [{
+                name: file.name,
+                id: file.fileId
+            }];
         }
         core.emit('deletingFiles', deletingFiles, this.panelId, isRClick);
     }
@@ -494,7 +497,10 @@ export default class FilePanelManager extends ObservedObject {
         let checkedFiles = [];
         for (let i=0; i<files.length; i++) {
             if (files[i].selected) {
-                checkedFiles.push(files[i]);
+                checkedFiles.push({
+                    name: files[i].name,
+                    id: files[i].fileId
+                });
             }
         }
         if (checkedFiles[0]){

@@ -55,7 +55,8 @@ export default class AppHeader extends React.Component {
 
     
     render() {
-        let googleCredentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        // let googleCredentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        const { googleCredentials } = this.props;
         return (
             <FlexBand wrap="nowrap" style={{height: tabHeight}} >
                 <FlexBandItem style={{ width: '90%'}}>
@@ -106,24 +107,23 @@ export default class AppHeader extends React.Component {
                                     }}
                                     aria-owns="props-menu"
                                     aria-haspopup="true"
-                                    
+                                    onClick={this.handleClickMenu}
                                 >
                                     <MoreVert 
                                         style={{
                                             fill: '#ffffff',
                                             
                                         }} 
-                                        onClick={this.handleClickMenu}
                                     />
                                 </IconButton>
                             </Tooltip>
-                                <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
-                                    <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
-                                    <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem> 
-                                    {(googleCredentials && googleCredentials.displayName)?
-                                        <MenuItem onClick={ this.handleOpenGoogleAccountDialog }> {googleCredentials.displayName} </MenuItem>:
-                                        <MenuItem onClick={  this.handleGoogleLogIn }> Log in to Google </MenuItem>}
-                                </Menu>
+                            <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
+                                <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
+                                <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem> 
+                                {(googleCredentials && googleCredentials.displayName)?
+                                    <MenuItem onClick={ this.handleOpenGoogleAccountDialog }> {googleCredentials.displayName} </MenuItem>:
+                                    <MenuItem onClick={  this.handleGoogleLogIn }> Log in to Google </MenuItem>}
+                            </Menu>
                         </FlexBandItem>
                     </FlexBand>
                 </FlexBandItem>

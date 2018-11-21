@@ -141,7 +141,8 @@ class Main extends Component {
             openErrorSnackbar: false,
             drives: null,
             openChangeDrivesDialog: false,
-            welcomeDialog: (localStorage.getItem("welcome"))? false:true
+            welcomeDialog: (localStorage.getItem("welcome"))? false:true,
+            googleCredentials: {}
         };
 
         console.log("window SIZE: ", window);
@@ -152,6 +153,7 @@ class Main extends Component {
     componentDidMount() {
         console.log(core.location);
         core.ipc.send('getDrives');
+        core.ipc.send('getGoogleStatus');
         // let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
         // if (credentials) {
         //     core.ipc.send('setToken', credentials.idToken);
@@ -173,6 +175,7 @@ class Main extends Component {
         core.ipc.on('getDrivesCallback', this.handleGetFiles);
         core.ipc.on('googleLogInCallback', this.handleGoogleLogInCallback);
         core.ipc.on('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
+        core.ipc.on('getGoogleStatusCallback', this.handleGoogleStatus);
         let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
         if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
             core.location = defaultPath;
@@ -199,6 +202,12 @@ class Main extends Component {
 
     handleChangeDrive = (event, drive) => {
         
+    }
+
+    handleGoogleStatus = (event, status, credentials) => {
+        if (status == "LOGGED") {
+            this.setState({googleCredentials: credentials})
+        }
     }
 
     handleUpdateGoogleCredentials = (event, tokens) => {
@@ -469,11 +478,25 @@ class Main extends Component {
             color: "#E8EAF6",
         };
 
-        let { openGoogleAccountDialog } = this.state;
+        let { 
+            openGoogleAccountDialog, 
+            googleCredentials,  
+            openErrorSnackbar,
+            errorSnackbarMessage,
+            welcomeDialog,
+            drives,
+            openChangeDrivesDialog,
+            activePart,
+            openCloseConfirmDialog,
+            openOptionsDialog,
+            isClosing,
+            openKeyCommandsDialog,
+
+        } = this.state;
 
         return (
 	        <MuiThemeProvider theme={muiTheme} >
-                <Dialog open={this.state.welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
+                <Dialog open={welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
                     <DialogTitle><span style={{color: '#ffffff'}}>{'Welcome to Dos Navigator III Alpha!'}</span></DialogTitle>
                     <DialogContent>
                         <Typography style={{color: '#ffffff'}}> 
@@ -503,10 +526,10 @@ class Main extends Component {
                             vertical: 'bottom',
                             horizontal: 'center'
                         }}
-                        open={this.state.openErrorSnackbar}
+                        open={openErrorSnackbar}
                         autoHideDuration={2000}
                         onClose={this.handleCloseErrorSnackbar}
-                        message={this.state.errorSnackbarMessage}
+                        message={errorSnackbarMessage}
                         action={
                             <IconButton
                                 onClick={this.handleCloseErrorSnackbar}
@@ -516,26 +539,27 @@ class Main extends Component {
                         }
                     />
                     <KeyCommandsDialog
-                        open={this.state.openKeyCommandsDialog}
+                        open={openKeyCommandsDialog}
                         onClose={this.handleOpenKeyCommands}
                     />
                     <ChangeDriveDialog 
-                        open={this.state.openChangeDrivesDialog}
-                        drives={this.state.drives}
+                        open={openChangeDrivesDialog}
+                        drives={drives}
                         onClose={this.handleDrivesClick}
-                        activePart={this.state.activePart}
+                        activePart={activePart}
                     />
                     <OptionsDialog
-                        open={this.state.openOptionsDialog}
+                        open={openOptionsDialog}
                         onClose={this.handleOpenOptionsDialog}
                     />
                     <CloseConfirmDialog
-                        open={this.state.openCloseConfirmDialog}
-                        file={this.state.isClosing}
+                        open={openCloseConfirmDialog}
+                        file={isClosing}
                     />
                     <GoogleAccountDialog
                         open={openGoogleAccountDialog}
                         onClose={this.handleOpenGoogleAccountDialog}
+                        googleCredentials={googleCredentials}
                     />
                     <AppHeader 
                         tabs={this.state.tabs}
@@ -546,6 +570,7 @@ class Main extends Component {
                         openKeyCommands={this.handleOpenKeyCommands}
                         googleLogIn={this.handleGoogleLogIn}
                         openGoogleAccountDialog={this.handleOpenGoogleAccountDialog}
+                        googleCredentials={googleCredentials}
                     />
                     <div style={{height: window.innerHeight-tabHeight}}>
                         {this.state.tabs.map((tab, index) => {

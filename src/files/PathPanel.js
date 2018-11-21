@@ -204,8 +204,8 @@ export default class PathPanel extends Component {
                     <div className={ "panel-header" + ( this.props.isFocused ? " focused" : "" ) }>
                         {/* <div style={(this.props.location.path != '/' && os.type != "Windows_NT")?{position: 'relative', bottom: 10}:null} className="overflow-hidden" > */}
                             <FlexBand wrap="nowrap" style={{alignItems: 'center'}}>
-                                <IconButton style={iconSize}>
-                                    <ArrowBack style={{fill: '#000000'}} onClick={this.handleClick} />
+                                <IconButton style={iconSize} onClick={this.handleClick}>
+                                    <ArrowBack style={{fill: '#000000'}} />
                                 </IconButton>
                                 <FlexBandItem grow="1" style={{ overflow: "hidden" }} >
                                     { this.props.location.path }
@@ -215,8 +215,8 @@ export default class PathPanel extends Component {
                                     manager={ this.props.manager }
                                 />
                                 <Tooltip title="Change drive">
-                                    <IconButton style={iconSize}>
-                                        <img src={DriveImage} style={{width: 22, height: 'auto'}} onClick={this.handleDriveClick} />
+                                    <IconButton style={iconSize} onClick={this.handleDriveClick}>
+                                        <img src={DriveImage} style={{width: 22, height: 'auto'}} />
                                     </IconButton>
                                 </Tooltip>
                             </FlexBand>
