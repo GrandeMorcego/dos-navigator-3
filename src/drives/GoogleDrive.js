@@ -20,7 +20,6 @@ export default class GoogleDrive extends ObservedObject {
                 sender: sender,
                 location: location,
                 fromHomeDir: fromHomeDir,
-                credentials: JSON.parse(localStorage.getItem("googleCredentials"))
             }
         );
 

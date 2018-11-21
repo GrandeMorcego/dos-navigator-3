@@ -418,12 +418,20 @@ ipcMain.on('deleteFiles', (event, files, drive, path) => {
             })
         }
     } else if (drive == "googleDrive") {
-        const credentials = JSON.parse(store.get("googleCredentials"));
-        const {access_token, refresh_token} = credentials.tokens;
-        for (let i=0; i<files.length; i++) {
-            console.log(files[i].id);
-            deleteGoogleDriveFile(access_token, refresh_token, files[i].id);
+        deleteDriveFiles = async () => {
+            const credentials = JSON.parse(store.get("googleCredentials"));
+            const {access_token, refresh_token} = credentials.tokens;
+
+            for (let i=0; i<files.length; i++) {
+                console.log(files[i].id);
+                await deleteGoogleDriveFile(access_token, refresh_token, files[i].id);
+            }
+
+            mainWindow.webContents.send("directoryUpdate", path);
+            mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
         }
+        
+        deleteDriveFiles(files)
     }
     
 
@@ -538,11 +546,14 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => 
 
     let key;
     
-    if (location.addToPath != '..') {
-        key = fromHomeDir? 'root' : location.addToPath; 
-    } else {
+    if (location.addToPath === '..') {
         let parent = location.realPath.split('/')
         key = parent[parent.length-2]
+    } else if (!location.addToPath) {
+        let parent = location.realPath.split('/')
+        key = parent[parent.length-1]
+    } else {
+        key = fromHomeDir? 'root' : location.addToPath; 
     }
 
     console.log('KEY: ', key);
