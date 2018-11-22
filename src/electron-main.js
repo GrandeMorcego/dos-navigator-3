@@ -68,6 +68,7 @@ const GOOGLE_PROFILE_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const GOOGLE_REDIRECT_URI =  'http://localhost:8880'; //'com.dosnavigator.app';
 const GOOGLE_CLIENT_ID = '749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com';
 const GOOGLE_CLIENT_SECRET = 'DS9gtsvFUO0G7NR4f9377vnT';
+const GOOGLE_FOLDER = 'application/vnd.google-apps.folder'
 
 async function googleSignIn() {
     const code = await signInWithPopup();
@@ -116,7 +117,8 @@ signInWithPopup = () => {
             response_type: 'code',
             redirect_uri: GOOGLE_REDIRECT_URI,
             client_id: GOOGLE_CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile'
+            access_type: 'online',
+            scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile'
         }
         const authUrl = `${GOOGLE_AUTHORIZATION_URL}?${qs.stringify(urlParams)}`
   
@@ -337,8 +339,8 @@ usbDetect.on('remove', () => {
 })
 
 ipcMain.on("getGoogleStatus", () => {
-    const credentials = JSON.parse(store.get("googleCredentials"));
-    if (credentials && credentials.displayName) {
+    const credentials = store.get("googleCredentials");
+    if (credentials) {
         mainWindow.webContents.send("getGoogleStatusCallback", "LOGGED", credentials);
     }
 })
@@ -397,6 +399,25 @@ ipcMain.on("createDirectory", (event, location, path) => {
     }
 })
 
+ipcMain.on("createGDriveDirectory", (event, parent, dir) => {
+    const credentials = JSON.parse(store.get("googleCredentials"));
+    const {access_token, refresh_token} = credentials.tokens;
+    console.log(access_token);
+    axios.post("https://www.googleapis.com/drive/v3/files", {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ` + access_token,
+        },
+        body: {
+            name: dir,
+            mimeType: GOOGLE_FOLDER,
+            parents: [parent]
+        }
+    }).then(response => {
+        mainWindow.webContents.send("createDirectoryCallback", 'success', null);
+    })
+})
+
 ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
     fs.rename(prevLocation, nextLocation, (e) => {
         if (e) {
@@ -409,6 +430,8 @@ ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
 
 ipcMain.on('deleteFiles', (event, files, path, perm) => {
     if (!perm) {
+        console.log(path);
+
         for (let i=0; i<files.length; i++) {
             let dir = path + '/' + files[i].name;
             trash(dir).then(() => {
@@ -437,7 +460,7 @@ ipcMain.on('deleteFiles', (event, files, path, perm) => {
 
 })
 
-ipcMain.on("deleteGDriveFiles", (event, files, path) => {
+ipcMain.on("deleteGDriveFiles", async (event, files, path) => {
     const credentials = JSON.parse(store.get("googleCredentials"));
     const {access_token, refresh_token} = credentials.tokens;
 

@@ -52,6 +52,10 @@ export default class BasicDrive extends ObservedObject {
         core.ipc.send("deleteFiles", files, location.path, perm);
     }
 
+    createDirectory(location, path) {
+        core.ipc.send("createDirectory", location, path);
+    }
+
 
 }
 

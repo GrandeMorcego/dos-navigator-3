@@ -48,11 +48,14 @@ export default class MakeDirDialog extends React.Component {
     }
     
     componentWillReceiveProps() {
+        const {location} = this.props;
         this.setState({
-            location: this.props.location.path,
-            displayPath: this.props.location.path + '/',
-            transLocation: this.props.location.path + '/'
+            location: location.path,
+            displayPath: location.path + '/',
+            transLocation: location.path + '/'
         });
+
+        console.log("MKDIR LOCATION ===>>> ", this.props.location);
 
         if (this.state.path != ('' || null)) {
             let event = {target: {value: this.state.path}};
@@ -70,7 +73,7 @@ export default class MakeDirDialog extends React.Component {
             transLocation: this.state.location
         })
 
-        if (this.state.manager) {
+        if (this.state.manager && this.props.location.drive != "googleDrive") {
             let newPath = this.state.manager.reformatPath(value, this.state.location);
             if (newPath[0] == '/') {
                 this.setState({
@@ -111,7 +114,11 @@ export default class MakeDirDialog extends React.Component {
                     errorMessage: 'Path cannot be empty'
                 });
             } else {
-                core.ipc.send("createDirectory", this.state.transLocation, this.state.transPath);
+                // core.ipc.send("createDirectory", this.state.transLocation, this.state.transPath);
+                let manager = this.state.manager;
+                if (manager) {
+                    manager.createDirectory(this.state.transLocation, this.state.transPath);
+                }
             }
         }
     }
@@ -131,6 +138,7 @@ export default class MakeDirDialog extends React.Component {
                                 
                     } */}
                     <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
+                    {(this.state.manager && this.props.location.drive == "googleDrive")?<Typography variant="subheading" style={{color: "#ffffff"}}>Note: Google Drive file creation does not support notaions</Typography>:null}
                     <TextField 
                         error={this.state.pathError} 
                         label={(this.state.pathError)? this.state.errorMessage :"Enter path" }

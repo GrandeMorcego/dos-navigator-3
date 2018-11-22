@@ -49,13 +49,8 @@ export default class DeleteConfirmDialog extends React.Component {
         let { manager, perm, files } = this.state;
 
         if (manager) {
+            console.log("DELETE FILES ===>>> ", manager.deleteFiles)
             manager.deleteFiles(files, perm)
-        }
-        
-        if (this.state.perm) {
-            core.ipc.send("deleteFilesPerm", this.state.files, location.path)
-        } else {
-            core.ipc.send("deleteFiles", this.state.files, location.drive, location.path);
         }
     }
 

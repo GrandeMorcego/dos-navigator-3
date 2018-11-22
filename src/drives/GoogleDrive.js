@@ -38,4 +38,10 @@ export default class GoogleDrive extends ObservedObject {
     deleteFiles(files, location) {
         core.ipc.send("deleteGDriveFiles", files, location.path);
     }
+
+    createDirectory(parent, dir, realPath) {
+        let sPath = realPath.split('/');
+        let rParent = sPath[sPath.length - 1];
+        core.ipc.send("createGDriveDirectory", rParent, dir);
+    }
 }

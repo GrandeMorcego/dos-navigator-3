@@ -206,7 +206,7 @@ class Main extends Component {
 
     handleGoogleStatus = (event, status, credentials) => {
         if (status == "LOGGED") {
-            this.setState({googleCredentials: credentials})
+            this.setState({googleCredentials: JSON.parse(credentials)})
         }
     }
 

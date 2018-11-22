@@ -159,6 +159,12 @@ export default class FilePanelManager extends ObservedObject {
         }
     }
 
+    createDirectory(path, dir) {
+        if (this.driveHandler) {
+            this.driveHandler.createDirectory(path, dir, this.location.realPath);
+        }
+    }
+
     handleDeleteFiles(file, isRClick) {
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
