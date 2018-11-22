@@ -118,7 +118,7 @@ signInWithPopup = () => {
             redirect_uri: GOOGLE_REDIRECT_URI,
             client_id: GOOGLE_CLIENT_ID,
             access_type: 'online',
-            scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile'
+            scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
         }
         const authUrl = `${GOOGLE_AUTHORIZATION_URL}?${qs.stringify(urlParams)}`
   
@@ -443,7 +443,7 @@ ipcMain.on('deleteFiles', (event, files, path, perm) => {
     } else {
         try {
             for (let i=0; i<files.length; i++) {
-                let dir = path + '/' + files[i];
+                let dir = path + '/' + files[i].name;
                 rimraf(dir, (err) => {
                     if (err) {
                         throw err;
