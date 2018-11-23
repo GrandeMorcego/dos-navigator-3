@@ -171,22 +171,26 @@ async function fetchAccessTokens (code, grantType) {
     return response.data
 }
 
-async function fetchGoogleProfile (accessToken) {
+async function fetchGoogleProfile () {
     const response = await axios.get(GOOGLE_PROFILE_URL, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            // 'Authorization': `Bearer ${accessToken}`,
         },
     })
     return response.data
 }
 
-async function refreshGoogleAccessToken (refreshToken) {
+async function refreshGoogleAccessToken () {
+    const credentials = JSON.parse(store.get('googleCredentials'));
+
+    console.log(credentials.refresh_token)
+
     const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         grant_type: "refresh_token",
-        refresh_token: refreshToken
+        refresh_token: credentials.refresh_token
     }), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -194,25 +198,23 @@ async function refreshGoogleAccessToken (refreshToken) {
     })
 
     let tokens = response.data;
-    tokens.refresh_token = refreshToken
+    tokens.refresh_token = credentials.refresh_token
 
-    let credentials = JSON.parse(store.get("googleCredentials"));
     credentials.tokens = tokens;
     store.set("googleCredentials", JSON.stringify(credentials));
-    // mainWindow.webContents.send("updateGoogleCredentials", tokens);
-
-    // console.log(response.data);
 
     return response.data;
 }
 
-async function getGoogleDriveData(accessToken, refreshToken, query) {
+async function getGoogleDriveData(query) {
     // const accessToken = credentials.tokens.access_token
+
+    // const {access_token} = JSON.parse(store.get('googleCredentials'));
 
     let response = await axios.get("https://www.googleapis.com/drive/v3/files", {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            // 'Authorization': `Bearer ${access_token}`,
         },
         params: {
             key: GOOGLE_CLIENT_ID,
@@ -221,7 +223,8 @@ async function getGoogleDriveData(accessToken, refreshToken, query) {
             orderBy: 'folder,name',
         }
     }).catch(async err => {
-        const token = await refreshGoogleAccessToken(refreshToken);
+        const token = await refreshGoogleAccessToken();
+        checkGoogleStatus();
         const data = await getGoogleDriveData(token.access_token, token.refresh_token);
         response = data;
     })
@@ -231,15 +234,16 @@ async function getGoogleDriveData(accessToken, refreshToken, query) {
     }
 }
 
-async function deleteGoogleDriveFile(accessToken, refreshToken, fileId) {
+async function deleteGoogleDriveFile(fileId) {
     let response = await axios.delete(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            // 'Authorization': `Bearer ${accessToken}`,
         },
     }).catch(async err => {
-        const token = await refreshGoogleAccessToken(refreshToken);
-        const data = await deleteGoogleDriveFile(token.access_token, token.refresh_token);
+        await refreshGoogleAccessToken();
+        checkGoogleStatus();
+        const data = await deleteGoogleDriveFile(fileId);
         response = data;
     })
 
@@ -339,14 +343,22 @@ usbDetect.on('remove', () => {
 })
 
 ipcMain.on("getGoogleStatus", () => {
+    checkGoogleStatus();
+});
+
+const checkGoogleStatus = () => {
     const credentials = store.get("googleCredentials");
     if (credentials) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${JSON.parse(credentials).access_token}`;
+
         mainWindow.webContents.send("getGoogleStatusCallback", "LOGGED", credentials);
     }
-})
+}
 
 ipcMain.on("googleLogOut", () => {
     store.delete("googleCredentials");
+    
+    checkGoogleStatus();
 })
 
 ipcMain.on("requestNewWindow", (event, data) => {
@@ -402,23 +414,25 @@ ipcMain.on("createDirectory", (event, location, path) => {
 ipcMain.on("createGDriveDirectory", (event, parent, dir) => {
     const credentials = JSON.parse(store.get("googleCredentials"));
     const {access_token, refresh_token} = credentials.tokens;
+    // mainWindow.webContents.send("testEndpoint", {access_token, parent, dir, GOOGLE_FOLDER});
+
     console.log(access_token);
     axios.post("https://www.googleapis.com/drive/v3/files", {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ` + access_token,
-        },
-        body: {
+        // headers: {
+            // Authorization: `Bearer ${access_token}`,
+        // },
+        data: {
             name: dir,
             mimeType: GOOGLE_FOLDER,
             parents: [parent]
         }
     }).then(response => {
+        console.log("RESPONSE ===>>> ", response);
         mainWindow.webContents.send("createDirectoryCallback", 'success', null);
     })
 })
 
-ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
+ipcMain.on('renMov', (event, prevLocation, nextLocation) => {   
     fs.rename(prevLocation, nextLocation, (e) => {
         if (e) {
             mainWindow.webContents.send("renMovCallback", e, nextLocation);
@@ -549,7 +563,8 @@ ipcMain.on('getDrives', (event) => {
 
 ipcMain.on('googleLogIn', async (event) => {
     await googleSignIn().then(e => {
-        console.log('OKAY')
+        // console.log('OKAY')
+        checkGoogleStatus();
     });
 });
 

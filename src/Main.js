@@ -21,6 +21,7 @@ import AppHeader from './files/AppHeader';
 import ChangeDriveDialog from './files/ChangeDriveDialog';
 import KeyCommandsDialog from './files/KeyCommandsDialog';
 import GoogleAccountDialog from './files/GoogleAccountDialog';
+import axios from 'axios';
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -165,6 +166,7 @@ class Main extends Component {
             this.forceUpdate();
         })
         core.on("keyDown", this.handleSpecialKeyDown);
+        core.ipc.on("testEndpoint", this.handleTestEndpoint);
         core.on("keyUp", this.handleSpecialKeyUp);
         core.on('gotFileContent', this.handleEditFile);
         core.on('fileSaveAction', this.fileSaveAction);
@@ -198,6 +200,11 @@ class Main extends Component {
         core.ipc.removeListener('googleLogInCallback', this.handleGoogleLogInCallback);     
         core.ipc.removeListener('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
 
+    }
+
+    handleTestEndpoint = (event, {parent, dir, GOOGLE_FOLDER, access_token}) => {
+        console.log(access_token);
+        
     }
 
     handleChangeDrive = (event, drive) => {

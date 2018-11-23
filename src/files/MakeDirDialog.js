@@ -55,8 +55,6 @@ export default class MakeDirDialog extends React.Component {
             transLocation: location.path + '/'
         });
 
-        console.log("MKDIR LOCATION ===>>> ", this.props.location);
-
         if (this.state.path != ('' || null)) {
             let event = {target: {value: this.state.path}};
             this.handlePathChange(event);
