@@ -104,15 +104,22 @@ export default class MakeDirDialog extends React.Component {
                     errorMessage: newPath[1]
                 })
             }
+        } else if (this.props.location.drive == "googleDrive") {        
+            this.setState({
+                transPath: value
+            }) 
         }
     }
 
     handleCopyClick = () => {
-        if (!this.state.pathError) {
-            if (this.state.path == "" || !this.state.path) {
-                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.file.name);
-            } else {
-                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.transPath);
+        let { path, pathError, transLocation, file, transPath, manager } = this.state;
+        if (!pathError) {
+            let from = core.location[this.props.panelId].path + '/' + file.name;
+            let iFile = (path == "" || !path)? file.name:transPath;
+            let to = transLocation + '/' + iFile
+            console.log(from, to);
+            if (manager) {
+                manager.copyFiles(from, to);
             }
         }
         

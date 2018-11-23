@@ -63,16 +63,17 @@ export default class MakeDirDialog extends React.Component {
 
     handlePathChange = (event) => {
         let value = event.target.value;
+        const { manager, location } = this.state;
 
         this.setState({
             path: value,
             pathError: false,
             errorMessage: '',
-            transLocation: this.state.location
+            transLocation: location
         })
 
-        if (this.state.manager && this.props.location.drive != "googleDrive") {
-            let newPath = this.state.manager.reformatPath(value, this.state.location);
+        if (manager && this.props.location.drive != "googleDrive") {
+            let newPath = manager.reformatPath(value, location);
             if (newPath[0] == '/') {
                 this.setState({
                     displayPath: value,
@@ -100,6 +101,10 @@ export default class MakeDirDialog extends React.Component {
                     errorMessage: newPath[1]
                 })
             }
+        } else if (this.props.location.drive == "googleDrive") {        
+            this.setState({
+                transPath: value
+            }) 
         }
         
     }
@@ -136,7 +141,7 @@ export default class MakeDirDialog extends React.Component {
                                 
                     } */}
                     <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
-                    {(this.state.manager && this.props.location.drive == "googleDrive")?<Typography variant="subheading" style={{color: "#ffffff"}}>Note: Google Drive file creation does not support notaions</Typography>:null}
+                    {(this.state.manager && this.props.location.drive == "googleDrive")?<Typography style={{color: "#ffffff", fontSize: 14}}>Note: Google Drive file creation does not support notaions</Typography>:null}
                     <TextField 
                         error={this.state.pathError} 
                         label={(this.state.pathError)? this.state.errorMessage :"Enter path" }

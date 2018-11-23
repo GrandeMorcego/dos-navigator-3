@@ -165,6 +165,10 @@ export default class FilePanelManager extends ObservedObject {
         }
     }
 
+    copyFiles(from, to) {
+        this.driveHandler.copyFiles(from, to);
+    }
+
     handleDeleteFiles(file, isRClick) {
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);

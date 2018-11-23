@@ -171,11 +171,11 @@ async function fetchAccessTokens (code, grantType) {
     return response.data
 }
 
-async function fetchGoogleProfile () {
+async function fetchGoogleProfile (accessToken) {
     const response = await axios.get(GOOGLE_PROFILE_URL, {
         headers: {
             'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${accessToken}`,
         },
     })
     return response.data
@@ -184,7 +184,7 @@ async function fetchGoogleProfile () {
 async function refreshGoogleAccessToken () {
     const credentials = JSON.parse(store.get('googleCredentials'));
 
-    console.log(credentials.refresh_token)
+    console.log("refresh_token: ", credentials.refresh_token)
 
     const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
@@ -223,10 +223,12 @@ async function getGoogleDriveData(query) {
             orderBy: 'folder,name',
         }
     }).catch(async err => {
-        const token = await refreshGoogleAccessToken();
-        checkGoogleStatus();
-        const data = await getGoogleDriveData(token.access_token, token.refresh_token);
-        response = data;
+        if (err) {
+            const token = await refreshGoogleAccessToken();
+            checkGoogleStatus();
+            const data = await getGoogleDriveData(token.access_token, token.refresh_token);
+            response = data;
+        }
     })
 
     if (response) {
@@ -349,7 +351,9 @@ ipcMain.on("getGoogleStatus", () => {
 const checkGoogleStatus = () => {
     const credentials = store.get("googleCredentials");
     if (credentials) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${JSON.parse(credentials).access_token}`;
+        let accessToken = JSON.parse(credentials).tokens.access_token;
+        console.log(accessToken);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
         mainWindow.webContents.send("getGoogleStatusCallback", "LOGGED", credentials);
     }
@@ -415,19 +419,14 @@ ipcMain.on("createGDriveDirectory", (event, parent, dir) => {
     const credentials = JSON.parse(store.get("googleCredentials"));
     const {access_token, refresh_token} = credentials.tokens;
     // mainWindow.webContents.send("testEndpoint", {access_token, parent, dir, GOOGLE_FOLDER});
-
-    console.log(access_token);
+    console.log("NAME: ", dir);
+    // console.log()
     axios.post("https://www.googleapis.com/drive/v3/files", {
-        // headers: {
-            // Authorization: `Bearer ${access_token}`,
-        // },
-        data: {
-            name: dir,
-            mimeType: GOOGLE_FOLDER,
-            parents: [parent]
-        }
+        name: dir,
+        mimeType: GOOGLE_FOLDER,
+        parents: [parent]
+        
     }).then(response => {
-        console.log("RESPONSE ===>>> ", response);
         mainWindow.webContents.send("createDirectoryCallback", 'success', null);
     })
 })
@@ -475,12 +474,12 @@ ipcMain.on('deleteFiles', (event, files, path, perm) => {
 })
 
 ipcMain.on("deleteGDriveFiles", async (event, files, path) => {
-    const credentials = JSON.parse(store.get("googleCredentials"));
-    const {access_token, refresh_token} = credentials.tokens;
+    // const credentials = JSON.parse(store.get("googleCredentials"));
+    // const {access_token, refresh_token} = credentials.tokens;
 
     for (let i=0; i<files.length; i++) {
         console.log(files[i].id);
-        await deleteGoogleDriveFile(access_token, refresh_token, files[i].id);
+        await deleteGoogleDriveFile(files[i].id);
     }
 
     mainWindow.webContents.send("directoryUpdate", path);
@@ -590,7 +589,7 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => 
 
     console.log('KEY: ', key);
     
-    getGoogleDriveData(access_token, refresh_token, `'${key}' in parents`)
+    getGoogleDriveData(`'${key}' in parents`)
         .then(async response  =>  {
             let files = reformatGoogleDriveFiles(response.files);
             

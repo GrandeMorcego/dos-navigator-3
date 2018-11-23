@@ -40,6 +40,7 @@ export default class GoogleDrive extends ObservedObject {
     }
 
     createDirectory(parent, dir, realPath) {
+        console.log("CREATE FOLDER: ", dir);
         let sPath = realPath.split('/');
         let rParent = sPath[sPath.length - 1];
         core.ipc.send("createGDriveDirectory", rParent, dir);

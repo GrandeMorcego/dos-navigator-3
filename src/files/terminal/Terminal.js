@@ -20,30 +20,30 @@ export default class DNTerminal extends React.Component {
         this.terminal;
     }
 
-    componentDidMount() {
-        Terminal.applyAddon(attach);
-        Terminal.applyAddon(fit);
-        Terminal.applyAddon(fullscreen);
-        this.terminal = new Terminal({
-            fontFamily: (os.type == "Linux")? "ubuntu mono":null
-        });
+    // componentDidMount() {
+    //     Terminal.applyAddon(attach);
+    //     Terminal.applyAddon(fit);
+    //     Terminal.applyAddon(fullscreen);
+    //     this.terminal = new Terminal({
+    //         fontFamily: (os.type == "Linux")? "ubuntu mono":null
+    //     });
 
-        axios.post('/api/openTerminal', {}).then((response) => {
-            this.setState({pid: response.data});
-            this.terminal.open(document.getElementById("terminal" + this.props.terminalId));
-            // terminal.fit()
-            // terminal.toggleFullScreen();
+    //     axios.post('/api/openTerminal', {}).then((response) => {
+    //         this.setState({pid: response.data});
+    //         this.terminal.open(document.getElementById("terminal" + this.props.terminalId));
+    //         // terminal.fit()
+    //         // terminal.toggleFullScreen();
             
-            this.termSocket = new WebSocket("ws://localhost:3030/terminal/" + this.state.pid);
-            this.termSocket.onopen = () => {
-                this.terminal.attach(this.termSocket);
-                this.terminal._initialized = true;
-                console.log('WS has been opened');
-            }
-        })
+    //         this.termSocket = new WebSocket("ws://localhost:3030/terminal/" + this.state.pid);
+    //         this.termSocket.onopen = () => {
+    //             this.terminal.attach(this.termSocket);
+    //             this.terminal._initialized = true;
+    //             console.log('WS has been opened');
+    //         }
+    //     })
 
-        core.on('termEmit', this.emitCommand);
-    }
+    //     core.on('termEmit', this.emitCommand);
+    // }
 
     emitCommand = (event, path) => {
         this.terminal.focus();
