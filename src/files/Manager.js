@@ -165,20 +165,26 @@ export default class FilePanelManager extends ObservedObject {
         }
     }
 
-    copyFiles(from, to) {
-        this.driveHandler.copyFiles(from, to);
+    copyFiles(to, files, update) {
+        console.log("TO ==>> ", to)
+        this.driveHandler.copyFiles(this.location, to, files, update);
     }
 
-    handleDeleteFiles(file, isRClick) {
+    handleActionFiles(file, isRClick, action) {
+        console.log("GOT ACTION ==>> ", action);
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
         if (deletingFiles == 'NOCHECK' || isRClick) {
             deletingFiles = [{
                 name: file.name,
-                id: file.fileId
+                id: file.fileId,
+                mimeType: file.mimeType,
+                size: file.size
             }];
+
         }
-        core.emit('deletingFiles', deletingFiles, this.panelId, isRClick, this);
+
+        core.emit(action, deletingFiles, this.panelId, isRClick, this);
     }
 
     filesSelectByColor = (file, action) => {
@@ -515,7 +521,8 @@ export default class FilePanelManager extends ObservedObject {
             if (files[i].selected) {
                 checkedFiles.push({
                     name: files[i].name,
-                    id: files[i].fileId
+                    id: files[i].fileId,
+                    mimeType: files[i].mimeType
                 });
             }
         }

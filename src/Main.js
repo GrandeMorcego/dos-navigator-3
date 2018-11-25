@@ -181,7 +181,8 @@ class Main extends Component {
         let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
         if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
             core.location = defaultPath;
-            this.setState({startLocation: core.location});
+            // this.setState({startLocation: core.location});
+            this.forceUpdate();
         }
     }
 
@@ -591,7 +592,8 @@ class Main extends Component {
                                                 openOptionsDialog={this.handleOpenOptionsDialog}
                                                 isFocused={this.state.activePart === "left"}
                                                 partId="left"
-                                                location={this.state.startLocation.left}
+                                                // location={this.state.startLocation.left}
+                                                location={core.location.left}
                                                 onFocusRequest={this.handleFocusRequest}
                                             />
     
@@ -603,7 +605,7 @@ class Main extends Component {
                                                     openOptionsDialog={this.handleOpenOptionsDialog}
                                                     isFocused={this.state.activePart === "right"}
                                                     partId="right"
-                                                    location={this.state.startLocation.right}
+                                                    location={core.location.right}
                                                     onFocusRequest={this.handleFocusRequest}
                                                 />
                                     

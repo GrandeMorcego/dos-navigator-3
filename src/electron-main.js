@@ -19,7 +19,12 @@ const qs = require('querystring');
 const {parse} = require('url');
 const Store = require("electron-store");
 const store = new Store();
+const {google} = require("googleapis");
 
+const googleDrive = google.drive({
+    version: "v3",
+    auth: "749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com"
+})
 // let spawn;
 // try {
 //     spawn = pty.spawn
@@ -117,7 +122,7 @@ signInWithPopup = () => {
             response_type: 'code',
             redirect_uri: GOOGLE_REDIRECT_URI,
             client_id: GOOGLE_CLIENT_ID,
-            access_type: 'online',
+            access_type: "offline",
             scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
         }
         const authUrl = `${GOOGLE_AUTHORIZATION_URL}?${qs.stringify(urlParams)}`
@@ -184,13 +189,13 @@ async function fetchGoogleProfile (accessToken) {
 async function refreshGoogleAccessToken () {
     const credentials = JSON.parse(store.get('googleCredentials'));
 
-    console.log("refresh_token: ", credentials.refresh_token)
+    console.log("refresh_token: ", credentials)
 
     const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         grant_type: "refresh_token",
-        refresh_token: credentials.refresh_token
+        refresh_token: credentials.tokens.refresh_token
     }), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -516,14 +521,180 @@ ipcMain.on('createFile', (event, path) => {
     })
 })
 
-ipcMain.on('copyFile', (event, oldPath, newPath) => {
-    ncp(oldPath, newPath, (err) => {
-        if (err) {
-            mainWindow.webContents.send('copyFileCallback', 'ERR', err);
-        } else {
-            mainWindow.webContents.send('copyFileCallback', 'SUCCESS');
+ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
+    if (drive == "googleDrive") {
+        let sTo = path.split("/");
+        let parent = sTo[sTo.length - 1];
+
+        const parentTo = await getGoogleDriveFile("name", parent);
+
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+            let fileData;
+
+            // await fs.readFile(oldPath + "/" + file.name, (err, data) => {
+            //     if (!err) {
+            //         fileData = data;
+            //     }
+            // })
+            
+            let fileContent = fs.createReadStream(oldPath + '/' + file.name);
+            
+
+            let metadata = {
+                name: file.name,
+                parents: [parentTo]
+            }
+            let FormData = require("form-data");
+            let accessToken = JSON.parse(store.get("googleCredentials")).tokens.access_token;
+            let form = new FormData();
+            form.append('metadata', metadata);
+            form.append('file', fileContent);
+
+            let xhr = new XMLHttpRequest();
+
+            xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart");
+            xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+            xhr.responseType = 'json';
+            xhr.send(form);
+            // await axios.post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", 
+            //     // resourse: {
+            //     //     name: file.name,
+            //     // },
+            //     // headers: {
+            //     //     ContentType: "image/png",
+            //     //     ContentLength: file.size,
+            //     // },
+            //     // media: {
+            //     //     mimeType: "image/png",
+            //     //     body: fs.createReadStream(oldPath + '/' + file.name)
+            //     // }
+                
+            //     fs.createReadStream(oldPath + '/' + file.name),
+            //     {
+            //         headers: {
+            //             'Content-Type': "multipart/related"
+            //         },
+            //         name: file.name
+            //     }
+                
+            // // }
+            // ).then(response => {
+            //     console.log(response);
+            // })
         }
-    })
+        
+        mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+    } else {
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i].name
+            console.log(file)
+            ncp(oldPath + "/" + file, path + "/" + file, (err) => {
+                if (err) {
+                    // console.log(err);
+                    mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
+                } else {
+                    mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+                }
+            })
+        }
+    }
+})
+
+const googleDocsTypes = {
+    "application/vnd.google-apps.document": {
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ext: ".docx"
+    },
+    "application/vnd.google-apps.drawing": {
+        mimeType:"image/png",
+        ext: ".png"
+    },
+    "application/vnd.google-apps.script": {
+        mimeType:"application/vnd.google-apps.script+json",
+        ext: ".json"
+    },
+    "application/vnd.google-apps.spreadsheet": {
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ext: ".xslx"
+    },
+    "application/vnd.google-apps.presentation": {
+        mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ext: ".pptx"
+    }
+}
+
+ipcMain.on('copyGDriveFiles', async (event, updatePath, {path, drive}, files) => {
+    let sTo = path.split("/");
+    let parent = sTo[sTo.length - 1];
+
+    const parentTo = await getGoogleDriveFile("name", parent);
+    try {
+        if (drive == "googleDrive") {
+            console.log("TO GOOGLE DRIVE", files);
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i].id;
+                    await axios.post(`https://www.googleapis.com/drive/v3/files/${file}/copy`, {
+                        parents: [parentTo],
+                        name: files[i].name
+                    }).catch(err => {
+                        throw err;
+                    })
+                
+            }
+        } else {
+            console.log("TO FILE DRIVE", files);
+            writeFile = (response, file, ext) => {
+                console.log(typeof(Buffer.from(response.data, "binary")));
+                fs.writeFile(path + "/" + file + ext, Buffer.from(response.data, "binary"), (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                });
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i]
+
+                let query;
+                let ext = "";
+                let type = googleDocsTypes[file.mimeType];
+                if (type) {
+                    query = {
+                        endpoint: `https://www.googleapis.com/drive/v3/files/${file.id}/export`,
+                        data: {
+                            mimeType: type.mimeType,
+                        }
+
+                    }
+                    ext = type.ext
+                } else {
+                    query = {
+                        endpoint: `https://www.googleapis.com/drive/v3/files/${file.id}`,
+                        data: {
+                            alt: "media",
+                        }
+                    }
+                }
+
+                await axios.get(query.endpoint, {          
+                    params: query.data,
+                    responseType: "arraybuffer"
+                }).then(response => {
+                    writeFile(response, file.name, ext);
+                }).catch(err => {
+                    throw err;
+                })          
+            }
+        }
+    } catch (err) {
+        mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
+    }
+    
+
+    mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+    mainWindow.webContents.send("directoryUpdate", updatePath);
 })
 
 ipcMain.on('fastCopyFile', (event, files, newPath, action) => {
@@ -594,8 +765,8 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => 
             let files = reformatGoogleDriveFiles(response.files);
             
             if (location.addToPath != '..') {
-                location.path = fromHomeDir? 'Google Drive /root': location.path + `/${location.fileName}`
-                location.realPath = fromHomeDir? 'root': location.realPath + `/${key}`
+                location.path = fromHomeDir? 'Google Drive /root': location.addToPath?location.path + `/${location.fileName}`:location.path
+                location.realPath = fromHomeDir? 'root': location.addToPath? location.realPath + `/${key}`: location.realPath
             } else {
                 let parent = location.path.split('/')
                 parent.splice(parent.length-1,);
@@ -613,35 +784,32 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => 
 
 } )
 
-getGoogleDriveFile = async (accessToken, refreshToken, entity, file) => {
+getGoogleDriveFile = async (entity, file) => {
     let response;
     let fileFinal;
     if (entity == 'id') {
         response = await axios.get(`https://www.googleapis.com/drive/v3/files/${file}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
             params: {
                 key: GOOGLE_CLIENT_ID,
             }
         }).catch(async err => {
             console.log('ERROR IN files.get');
-            const token = await refreshGoogleAccessToken(refreshToken);
-            getGoogleDriveFile(token.access_token, token.refresh_token, 'id', file);
+            const token = await refreshGoogleAccessToken();
+            getGoogleDriveFile('id', file);
         });
         
         if (response) {
             fileFinal = response.data.name;
         }
     } else if (entity == 'name') {
-        response = await getGoogleDriveData(accessToken, refreshToken, `name='${file}'`);
+        response = await getGoogleDriveData(`name='${file}'`);
 
         console.log('DONE')
 
         console.log('FILES: ', response.files);
-
-        fileFinal = response.files[0].parents[0];
+        if (response.files && response.files[0]) {
+            fileFinal = response.files[0].id;
+        }
     }
      
 
@@ -661,7 +829,8 @@ reformatGoogleDriveFiles = (filesList) => {
             modifiedTime: file.modifiedTime,
             openTime: file.viewedByMe,
             size: (file.size)?file.size:null,
-            fileId: file.id
+            fileId: file.id,
+            mimeType: file.mimeType
         }
 
         reFiles.push(reFile);

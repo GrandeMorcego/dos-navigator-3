@@ -45,4 +45,8 @@ export default class GoogleDrive extends ObservedObject {
         let rParent = sPath[sPath.length - 1];
         core.ipc.send("createGDriveDirectory", rParent, dir);
     }
+
+    copyFiles(from, to, files, update) {
+        core.ipc.send("copyGDriveFiles", update, to, files);
+    }
 }
