@@ -75,6 +75,7 @@ export default class DrivePanel extends Component {
         core.on('keyDown', this.handleKeyDown);
         core.on('driveChanged', this.handleDriveChanged);
         core.ipc.on('directoryUpdate', this.handleDirectoryUpdate);
+        core.on('directoryUpdate', this.handleDirectoryUpdate);
     }
 
     componentWillUnount() {
@@ -100,6 +101,7 @@ export default class DrivePanel extends Component {
     }
 
     handleDirectoryUpdate = (event, dir) => {
+        console.log("UPDATING DIRECTORY: ", dir);
         if (dir == this.state.location.path) {
             this.manager.readFiles();
         }

@@ -19,12 +19,15 @@ const qs = require('querystring');
 const {parse} = require('url');
 const Store = require("electron-store");
 const store = new Store();
-const {google} = require("googleapis");
+// const {google} = require("googleapis");
+let FormData = require("form-data");
+// let Blob = require("blob")
 
-const googleDrive = google.drive({
-    version: "v3",
-    auth: "749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com"
-})
+
+// const googleDrive = google.drive({
+//     version: "v3",
+//     auth: "749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com"
+// })
 // let spawn;
 // try {
 //     spawn = pty.spawn
@@ -75,6 +78,7 @@ const GOOGLE_CLIENT_ID = '749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.goo
 const GOOGLE_CLIENT_SECRET = 'DS9gtsvFUO0G7NR4f9377vnT';
 const GOOGLE_FOLDER = 'application/vnd.google-apps.folder'
 
+let refreshTimeout;
 async function googleSignIn() {
     const code = await signInWithPopup();
     const tokens = await fetchAccessTokens(code, 'authorization_code');
@@ -91,6 +95,9 @@ async function googleSignIn() {
         displayName: name,
         tokens: tokens
     };
+    providerUser.expiringTime = Math.floor(Date.now()/1000) + 3570;
+    
+    providerUser.refresh_token = tokens.refresh_token;
 
     let status = '';
 
@@ -189,26 +196,21 @@ async function fetchGoogleProfile (accessToken) {
 async function refreshGoogleAccessToken () {
     const credentials = JSON.parse(store.get('googleCredentials'));
 
-    console.log("refresh_token: ", credentials)
+    console.log("refresh_token: ", credentials.expiringTime);
 
     const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         grant_type: "refresh_token",
-        refresh_token: credentials.tokens.refresh_token
+        refresh_token: credentials.refresh_token
     }), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         }
     })
-
-    let tokens = response.data;
-    tokens.refresh_token = credentials.refresh_token
-
-    credentials.tokens = tokens;
+    credentials.expiringTime = Math.floor(Date.now()/1000) + 3570;
+    credentials.tokens = response.data;
     store.set("googleCredentials", JSON.stringify(credentials));
-
-    return response.data;
 }
 
 async function getGoogleDriveData(query) {
@@ -229,9 +231,10 @@ async function getGoogleDriveData(query) {
         }
     }).catch(async err => {
         if (err) {
-            const token = await refreshGoogleAccessToken();
+            console.log(err.response);
+            await refreshGoogleAccessToken();
             checkGoogleStatus();
-            const data = await getGoogleDriveData(token.access_token, token.refresh_token);
+            const data = await getGoogleDriveData(query);
             response = data;
         }
     })
@@ -356,11 +359,21 @@ ipcMain.on("getGoogleStatus", () => {
 const checkGoogleStatus = () => {
     const credentials = store.get("googleCredentials");
     if (credentials) {
-        let accessToken = JSON.parse(credentials).tokens.access_token;
-        console.log(accessToken);
+        let parsedCredentials = JSON.parse(credentials);
+        let accessToken = parsedCredentials.tokens.access_token;
+
+        clearTimeout(refreshTimeout);
+
+        console.log("EXPIRING TIME: ", parsedCredentials.expiringTime - Math.floor(Date.now()/1000));
+        refreshTimeout = setTimeout(() => {
+            refreshGoogleAccessToken();
+        }, parsedCredentials.expiringTime*1000 - Date.now());
+
         axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
         mainWindow.webContents.send("getGoogleStatusCallback", "LOGGED", credentials);
+    } else {
+        mainWindow.webContents.send("getGoogleStatusCallback", "NOT LOGGED", credentials);
     }
 }
 
@@ -521,67 +534,59 @@ ipcMain.on('createFile', (event, path) => {
     })
 })
 
+const mimeTypesByExt = {
+    ".DOCX": "application/msword",
+    ".JS": "application/javascript",
+    ".JSON": "application/json",
+    ".XLSX": "application/vnd.ms-excel",
+    ".JPG": "image/jpeg",
+    ".PNG": "image/png",
+    ".SVG": "image/svg+xml",
+    ".PPTX": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+}
+
 ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
     if (drive == "googleDrive") {
+        console.log("INIT PATH: ", path);
         let sTo = path.split("/");
+        console.log("SPLITTED: ", sTo);
         let parent = sTo[sTo.length - 1];
+        console.log("PARENT NAME: ", parent);
 
-        const parentTo = await getGoogleDriveFile("name", parent);
+        let parentTo;
+        if (parent == "root") {
+            parentTo = parent
+        } else {
+            parentTo = await getGoogleDriveFile("name", parent);
+        }
 
         for (let i = 0; i < files.length; i++) {
             let file = files[i];
-            let fileData;
 
-            // await fs.readFile(oldPath + "/" + file.name, (err, data) => {
-            //     if (!err) {
-            //         fileData = data;
-            //     }
-            // })
+            let fileContent = fs.readFileSync(oldPath + "/" + file.name)
             
-            let fileContent = fs.createReadStream(oldPath + '/' + file.name);
-            
+            let mimeType;
+
+            if (mimeTypesByExt[file.ext]) {
+                mimeType = mimeTypesByExt[file.ext];
+            } else {
+                mimeType = "text/plain"
+            }
+
+            let fileSend = {
+                data: Buffer.from(fileContent).toString(),
+                mimeType: mimeType
+            }
 
             let metadata = {
                 name: file.name,
-                parents: [parentTo]
+                mimeType: mimeType,
+                parents: [parentTo],
             }
-            let FormData = require("form-data");
+
             let accessToken = JSON.parse(store.get("googleCredentials")).tokens.access_token;
-            let form = new FormData();
-            form.append('metadata', metadata);
-            form.append('file', fileContent);
 
-            let xhr = new XMLHttpRequest();
-
-            xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart");
-            xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-            xhr.responseType = 'json';
-            xhr.send(form);
-            // await axios.post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", 
-            //     // resourse: {
-            //     //     name: file.name,
-            //     // },
-            //     // headers: {
-            //     //     ContentType: "image/png",
-            //     //     ContentLength: file.size,
-            //     // },
-            //     // media: {
-            //     //     mimeType: "image/png",
-            //     //     body: fs.createReadStream(oldPath + '/' + file.name)
-            //     // }
-                
-            //     fs.createReadStream(oldPath + '/' + file.name),
-            //     {
-            //         headers: {
-            //             'Content-Type': "multipart/related"
-            //         },
-            //         name: file.name
-            //     }
-                
-            // // }
-            // ).then(response => {
-            //     console.log(response);
-            // })
+            mainWindow.webContents.send("createFormData", metadata, fileSend, accessToken, path);
         }
         
         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');

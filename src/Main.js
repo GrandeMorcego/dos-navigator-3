@@ -178,6 +178,7 @@ class Main extends Component {
         core.ipc.on('googleLogInCallback', this.handleGoogleLogInCallback);
         core.ipc.on('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
         core.ipc.on('getGoogleStatusCallback', this.handleGoogleStatus);
+        core.ipc.on('createFormData', this.handleCreateFormData);
         let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
         if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
             core.location = defaultPath;
@@ -203,9 +204,61 @@ class Main extends Component {
 
     }
 
-    handleTestEndpoint = (event, {parent, dir, GOOGLE_FOLDER, access_token}) => {
-        console.log(access_token);
-        
+    handleCreateFormData = (event, metadata, file, accessToken, dir) => {
+        console.log(file);
+        console.log(metadata);
+        let sendFile = new Blob([file.data], {type: file.mimeType});
+        let sendMeta = new Blob([JSON.stringify(metadata)], {type: "application/json"});
+        let form = new FormData();
+
+        form.append("metadata", sendMeta);
+        form.append("file", sendFile);
+
+        axios.create({
+            headers: {
+                "Content-Type": 'multipart/related; charset=UTF-8',
+                "Authorization": "Bearer " + accessToken
+            }
+        }).post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", form).then(response => {
+            console.log(response);
+            core.emit("directoryUpdate", dir);
+        })
+    }
+
+    handleTestEndpoint = (event, {metadata, fileData}, access_token) => {
+        let file = new Blob(["TEST CONTENT"], {type: "text/plain"})
+        let form = new FormData();
+        let mmetadata = {
+            name: "testName",
+            mimeType: "text/plain"
+        }
+        form.append("metadata", new Blob([JSON.stringify(mmetadata)], {type: "application/json"}));
+        form.append("file", file);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+
+        console.log(form);
+        // axios({
+        //     method: "post",
+        //     url: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        //     config: {
+        //         headers: {
+        //             "Content-Type": 'multipart/related',
+        //             // "Authorization": "Bearer " + access_token
+        //         }
+        //     },
+        //     data: form,
+            
+        // }).then(response => {
+        //     console.log(response);
+        // })
+        axios.create({
+            headers: {
+                "Content-Type": 'multipart/related',
+                "Authorization": "Bearer " + access_token
+            }
+        }).post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", form).then(response => {
+            console.log(response);
+        })
     }
 
     handleChangeDrive = (event, drive) => {
@@ -215,6 +268,11 @@ class Main extends Component {
     handleGoogleStatus = (event, status, credentials) => {
         if (status == "LOGGED") {
             this.setState({googleCredentials: JSON.parse(credentials)})
+        } else if(status == "NOT LOGGED") {
+            this.setState({
+                googleCredentials: null,
+                openGoogleAccountDialog: false
+            });
         }
     }
 
@@ -554,6 +612,7 @@ class Main extends Component {
                         open={openChangeDrivesDialog}
                         drives={drives}
                         onClose={this.handleDrivesClick}
+                        googleCredentials={googleCredentials}
                         activePart={activePart}
                     />
                     <OptionsDialog

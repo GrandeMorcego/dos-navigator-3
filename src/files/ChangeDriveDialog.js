@@ -102,12 +102,15 @@ export default class ChangeDriveDialog extends React.Component {
                             
                             { mountPoints }
                             {/* <Typography> Cloud drives </Typography> */}
-                            <FormControlLabel
-                                key={ 'gdrive' }
-                                value={ 'googleDrive' }
-                                control={ <Radio color="default"/> }
-                                label={ 'Google Drive' }
-                            />
+                            {this.props.googleCredentials?
+                                <FormControlLabel
+                                    key={ 'gdrive' }
+                                    value={ 'googleDrive' }
+                                    control={ <Radio color="default"/> }
+                                    label={ 'Google Drive' }
+                                />:null
+                            }
+                            
                         </RadioGroup>
                     </FormControl>
                 </DialogContent>
