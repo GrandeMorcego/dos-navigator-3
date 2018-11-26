@@ -161,7 +161,7 @@ export default class FilePanelManager extends ObservedObject {
 
     createDirectory(path, dir) {
         if (this.driveHandler) {
-            this.driveHandler.createDirectory(path, dir, this.location.realPath);
+            this.driveHandler.createDirectory(path, dir, this.location);
         }
     }
 
@@ -259,7 +259,7 @@ export default class FilePanelManager extends ObservedObject {
     }
 
     reformatPath(value, location) {
-        if ((value.charAt(0) == '/'  && os.type != "Windows_NT") || (value.charAt(1) == ':'  && os.type == "Windows_NT")) {
+        if ((value.charAt(0) == '/'  && os.type != "Windows_NT") || (value.charAt(1) == ':'  && os.type == "Windows_NT") || value.includes("://")) {
             return ['root', value]
         } else if ((value.charAt(1) == ':' && os.type != "Windows_NT") || (value.charAt(0) == '/' && os.type == "Windows_NT")) {
             return ['ERR', 'Wrong path format']

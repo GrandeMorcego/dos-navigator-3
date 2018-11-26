@@ -14,6 +14,7 @@ export default class MakeDirDialog extends React.Component {
 
         this.state = {
             path: '',
+            drive: '',
             nextPanel: nextPanel,
             pathError: false,
             label: '',
@@ -105,18 +106,21 @@ export default class MakeDirDialog extends React.Component {
                     errorMessage: newPath[1]
                 })
             }
-        } else if (this.props.location.drive == "googleDrive") {        
-            this.setState({
-                transPath: value
-            }) 
         }
     }
 
     handleCopyClick = () => {
-        let { path, pathError, transLocation, files, nextPanel, manager } = this.state;
+        let { transPath, pathError, transLocation, files, nextPanel, manager } = this.state;
         if (!pathError) {
             let update = core.location[nextPanel].path;
-            let to = {path: transLocation, drive: core.location[nextPanel].drive};
+            let drive;
+            let protocol = core.supportedProtocols[transPath.split('://')[0]];
+            if (transPath.includes("://") && core.supportedProtocols[transPath.split('://')[0]]) {
+                drive = protocol
+            } else {
+                drive = 'files'
+            }
+            let to = {path: transPath, drive: drive};
             console.log(manager);
             if (manager) {
                 manager.copyFiles(to, files, update);

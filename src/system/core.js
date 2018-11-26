@@ -105,6 +105,10 @@ class Core extends ObservedObject {
                 }
             ]
 
+            this.supportedProtocols = {
+                "gdrive": "googleDrive"
+            }
+
             this.showCheckboxes = false;
 
             this.keyMapper = new KeyMapper();

@@ -433,12 +433,8 @@ ipcMain.on("createDirectory", (event, location, path) => {
     }
 })
 
-ipcMain.on("createGDriveDirectory", (event, parent, dir) => {
-    const credentials = JSON.parse(store.get("googleCredentials"));
-    const {access_token, refresh_token} = credentials.tokens;
-    // mainWindow.webContents.send("testEndpoint", {access_token, parent, dir, GOOGLE_FOLDER});
+ipcMain.on("createGDriveDirectory", (event, parent, dir, updateDir) => {
     console.log("NAME: ", dir);
-    // console.log()
     axios.post("https://www.googleapis.com/drive/v3/files", {
         name: dir,
         mimeType: GOOGLE_FOLDER,
@@ -446,6 +442,7 @@ ipcMain.on("createGDriveDirectory", (event, parent, dir) => {
         
     }).then(response => {
         mainWindow.webContents.send("createDirectoryCallback", 'success', null);
+        mainWindow.webContents.send("directoryUpdate", updateDir)
     })
 })
 
@@ -770,7 +767,7 @@ ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => 
             let files = reformatGoogleDriveFiles(response.files);
             
             if (location.addToPath != '..') {
-                location.path = fromHomeDir? 'Google Drive /root': location.addToPath?location.path + `/${location.fileName}`:location.path
+                location.path = fromHomeDir? 'gdrive://root': location.addToPath?location.path + `/${location.fileName}`:location.path
                 location.realPath = fromHomeDir? 'root': location.addToPath? location.realPath + `/${key}`: location.realPath
             } else {
                 let parent = location.path.split('/')
