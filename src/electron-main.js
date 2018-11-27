@@ -627,12 +627,14 @@ const googleDocsTypes = {
 }
 
 ipcMain.on('copyGDriveFiles', async (event, updatePath, {path, drive}, files) => {
-    let sTo = path.split("/");
-    let parent = sTo[sTo.length - 1];
-
-    const parentTo = await getGoogleDriveFile("name", parent);
+    
     try {
         if (drive == "googleDrive") {
+            let sTo = path.split("/");
+            let parent = sTo[sTo.length - 1];
+
+            const parentTo = await getGoogleDriveFile("name", parent);
+            
             console.log("TO GOOGLE DRIVE", files);
 
             for (let i = 0; i < files.length; i++) {
