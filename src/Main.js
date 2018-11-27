@@ -20,6 +20,8 @@ import CloseConfirmDialog from './files/CloseConfirmDialog';
 import AppHeader from './files/AppHeader';
 import ChangeDriveDialog from './files/ChangeDriveDialog';
 import KeyCommandsDialog from './files/KeyCommandsDialog';
+import GoogleAccountDialog from './files/GoogleAccountDialog';
+import axios from 'axios';
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -110,7 +112,7 @@ const muiTheme = createMuiTheme({
             }
         }
     }
-})
+});
 
 class Main extends Component {
     constructor(props, context) {
@@ -132,6 +134,7 @@ class Main extends Component {
             terminalOn: false,
             openCloseConfirmDialog: false,
             openKeyCommandsDialog: false,
+            openGoogleAccountDialog: false,
             isClosing: {},
             nextTerminalId: 1,
             startLocation: core.location,
@@ -139,7 +142,8 @@ class Main extends Component {
             openErrorSnackbar: false,
             drives: null,
             openChangeDrivesDialog: false,
-            welcomeDialog: (localStorage.getItem("welcome"))? false:true
+            welcomeDialog: (localStorage.getItem("welcome"))? false:true,
+            googleCredentials: {}
         };
 
         console.log("window SIZE: ", window);
@@ -148,7 +152,13 @@ class Main extends Component {
     }
 
     componentDidMount() {
+        console.log(core.location);
         core.ipc.send('getDrives');
+        core.ipc.send('getGoogleStatus');
+        // let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        // if (credentials) {
+        //     core.ipc.send('setToken', credentials.idToken);
+        // }
         window.addEventListener("keydown", this.handleKeyDown);
         window.addEventListener("keyup", this.handleKeyUp);
         window.addEventListener("keypress", this.handleKeyPress);
@@ -156,17 +166,24 @@ class Main extends Component {
             this.forceUpdate();
         })
         core.on("keyDown", this.handleSpecialKeyDown);
+        core.ipc.on("testEndpoint", this.handleTestEndpoint);
         core.on("keyUp", this.handleSpecialKeyUp);
         core.on('gotFileContent', this.handleEditFile);
         core.on('fileSaveAction', this.fileSaveAction);
         core.on('execBashFile', this.fileExecBash);
         core.on('displayError', this.handleOpenErrorSnackbar);
         core.on('openDrives', this.handleDrivesClick);
+        core.on('handleChangeDrive', this.handleChangeDrive);
         core.ipc.on('getDrivesCallback', this.handleGetFiles);
+        core.ipc.on('googleLogInCallback', this.handleGoogleLogInCallback);
+        core.ipc.on('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
+        core.ipc.on('getGoogleStatusCallback', this.handleGoogleStatus);
+        core.ipc.on('createFormData', this.handleCreateFormData);
         let defaultPath = JSON.parse(localStorage.getItem('defaultPath'));
         if (defaultPath && defaultPath.left.path && defaultPath.right.path) {
             core.location = defaultPath;
-            this.setState({startLocation: core.location});
+            // this.setState({startLocation: core.location});
+            this.forceUpdate();
         }
     }
 
@@ -181,8 +198,99 @@ class Main extends Component {
         core.off('execBashFile', this.fileExecBash);
         core.off('displayError', this.handleOpenErrorSnackbar);
         core.off('openDrives', this.handleDrivesClick);
-        core.ipc.removeListener('getDrivesCallback', this.handleGetFiles);       
+        core.ipc.removeListener('getDrivesCallback', this.handleGetFiles);  
+        core.ipc.removeListener('googleLogInCallback', this.handleGoogleLogInCallback);     
+        core.ipc.removeListener('updateGoogleCredentials', this.handleUpdateGoogleCredentials);
 
+    }
+
+    handleCreateFormData = (event, metadata, file, accessToken, dir) => {
+        console.log(file);
+        console.log(metadata);
+        let sendFile = new Blob([file.data], {type: file.mimeType});
+        let sendMeta = new Blob([JSON.stringify(metadata)], {type: "application/json"});
+        let form = new FormData();
+
+        form.append("metadata", sendMeta);
+        form.append("file", sendFile);
+
+        axios.create({
+            headers: {
+                "Content-Type": 'multipart/related; charset=UTF-8',
+                "Authorization": "Bearer " + accessToken
+            }
+        }).post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", form).then(response => {
+            console.log(response);
+            core.emit("directoryUpdate", dir);
+        })
+    }
+
+    handleTestEndpoint = (event, {metadata, fileData}, access_token) => {
+        let file = new Blob(["TEST CONTENT"], {type: "text/plain"})
+        let form = new FormData();
+        let mmetadata = {
+            name: "testName",
+            mimeType: "text/plain"
+        }
+        form.append("metadata", new Blob([JSON.stringify(mmetadata)], {type: "application/json"}));
+        form.append("file", file);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+
+        console.log(form);
+        // axios({
+        //     method: "post",
+        //     url: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        //     config: {
+        //         headers: {
+        //             "Content-Type": 'multipart/related',
+        //             // "Authorization": "Bearer " + access_token
+        //         }
+        //     },
+        //     data: form,
+            
+        // }).then(response => {
+        //     console.log(response);
+        // })
+        axios.create({
+            headers: {
+                "Content-Type": 'multipart/related',
+                "Authorization": "Bearer " + access_token
+            }
+        }).post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", form).then(response => {
+            console.log(response);
+        })
+    }
+
+    handleChangeDrive = (event, drive) => {
+        
+    }
+
+    handleGoogleStatus = (event, status, credentials) => {
+        if (status == "LOGGED") {
+            this.setState({googleCredentials: JSON.parse(credentials)})
+        } else if(status == "NOT LOGGED") {
+            this.setState({
+                googleCredentials: null,
+                openGoogleAccountDialog: false
+            });
+        }
+    }
+
+    handleUpdateGoogleCredentials = (event, tokens) => {
+        let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+
+        credentials.tokens = tokens;
+
+        localStorage.setItem("googleCredentials", JSON.stringify(credentials));
+    }
+
+    handleGoogleLogInCallback = (event, status, data) => {
+        if (status != 'ERR') {
+            localStorage.setItem("googleCredentials", JSON.stringify(data));
+            core.emit('updateHeader');
+        } else {
+            core.emit('displayError', 'Log in attemt has failed');
+        }
     }
 
     handleGetFiles = (event, status, data) => {
@@ -381,6 +489,10 @@ class Main extends Component {
         })
     }
 
+    handleGoogleLogIn = () => {
+        core.ipc.send("googleLogIn");
+    }
+
     closeTab = (fileName) => {
         this.state.tabs.forEach((tab, index)=> {
             if (tab.name == fileName) {
@@ -418,7 +530,11 @@ class Main extends Component {
     handleOpenKeyCommands = () => {
         this.setState({openKeyCommandsDialog: !this.state.openKeyCommandsDialog});
     }
-    
+
+    handleOpenGoogleAccountDialog = () => {
+        this.setState({openGoogleAccountDialog: !this.state.openGoogleAccountDialog});
+    }    
+
     render() {
         const sflStyle = {      
             height: "100%",
@@ -428,9 +544,25 @@ class Main extends Component {
             color: "#E8EAF6",
         };
 
+        let { 
+            openGoogleAccountDialog, 
+            googleCredentials,  
+            openErrorSnackbar,
+            errorSnackbarMessage,
+            welcomeDialog,
+            drives,
+            openChangeDrivesDialog,
+            activePart,
+            openCloseConfirmDialog,
+            openOptionsDialog,
+            isClosing,
+            openKeyCommandsDialog,
+
+        } = this.state;
+
         return (
 	        <MuiThemeProvider theme={muiTheme} >
-                <Dialog open={this.state.welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
+                <Dialog open={welcomeDialog} onClose={this.handleCloseWelcomeDialog}>
                     <DialogTitle><span style={{color: '#ffffff'}}>{'Welcome to Dos Navigator III Alpha!'}</span></DialogTitle>
                     <DialogContent>
                         <Typography style={{color: '#ffffff'}}> 
@@ -460,10 +592,10 @@ class Main extends Component {
                             vertical: 'bottom',
                             horizontal: 'center'
                         }}
-                        open={this.state.openErrorSnackbar}
+                        open={openErrorSnackbar}
                         autoHideDuration={2000}
                         onClose={this.handleCloseErrorSnackbar}
-                        message={this.state.errorSnackbarMessage}
+                        message={errorSnackbarMessage}
                         action={
                             <IconButton
                                 onClick={this.handleCloseErrorSnackbar}
@@ -473,22 +605,28 @@ class Main extends Component {
                         }
                     />
                     <KeyCommandsDialog
-                        open={this.state.openKeyCommandsDialog}
+                        open={openKeyCommandsDialog}
                         onClose={this.handleOpenKeyCommands}
                     />
                     <ChangeDriveDialog 
-                        open={this.state.openChangeDrivesDialog}
-                        drives={this.state.drives}
+                        open={openChangeDrivesDialog}
+                        drives={drives}
                         onClose={this.handleDrivesClick}
-                        activePart={this.state.activePart}
+                        googleCredentials={googleCredentials}
+                        activePart={activePart}
                     />
                     <OptionsDialog
-                        open={this.state.openOptionsDialog}
+                        open={openOptionsDialog}
                         onClose={this.handleOpenOptionsDialog}
                     />
                     <CloseConfirmDialog
-                        open={this.state.openCloseConfirmDialog}
-                        file={this.state.isClosing}
+                        open={openCloseConfirmDialog}
+                        file={isClosing}
+                    />
+                    <GoogleAccountDialog
+                        open={openGoogleAccountDialog}
+                        onClose={this.handleOpenGoogleAccountDialog}
+                        googleCredentials={googleCredentials}
                     />
                     <AppHeader 
                         tabs={this.state.tabs}
@@ -497,6 +635,9 @@ class Main extends Component {
                         onCloseClick={this.handleCloseClick}
                         openOptions={this.handleOpenOptionsDialog}
                         openKeyCommands={this.handleOpenKeyCommands}
+                        googleLogIn={this.handleGoogleLogIn}
+                        openGoogleAccountDialog={this.handleOpenGoogleAccountDialog}
+                        googleCredentials={googleCredentials}
                     />
                     <div style={{height: window.innerHeight-tabHeight}}>
                         {this.state.tabs.map((tab, index) => {
@@ -510,7 +651,8 @@ class Main extends Component {
                                                 openOptionsDialog={this.handleOpenOptionsDialog}
                                                 isFocused={this.state.activePart === "left"}
                                                 partId="left"
-                                                location={this.state.startLocation.left}
+                                                // location={this.state.startLocation.left}
+                                                location={core.location.left}
                                                 onFocusRequest={this.handleFocusRequest}
                                             />
     
@@ -522,7 +664,7 @@ class Main extends Component {
                                                     openOptionsDialog={this.handleOpenOptionsDialog}
                                                     isFocused={this.state.activePart === "right"}
                                                     partId="right"
-                                                    location={this.state.startLocation.right}
+                                                    location={core.location.right}
                                                     onFocusRequest={this.handleFocusRequest}
                                                 />
                                     

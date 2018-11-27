@@ -21,6 +21,10 @@ export default class BasicDrive extends ObservedObject {
 
             core.ipc.on("getFiles", this.handleGetFiles);
         }
+
+
+        
+
         listHandlers[sender] = handler;
 
         console.log('Gettings files: ', location);
@@ -44,7 +48,17 @@ export default class BasicDrive extends ObservedObject {
         
     }
 
+    deleteFiles(files, location, perm) {
+        core.ipc.send("deleteFiles", files, location.path, perm);
+    }
 
+    createDirectory(location, path) {
+        core.ipc.send("createDirectory", location, path);
+    }
+
+    copyFiles(from, to, files) {
+        core.ipc.send("copyFiles", from.path, to, files);
+    }
 }
 
 

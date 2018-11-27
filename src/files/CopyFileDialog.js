@@ -14,6 +14,7 @@ export default class MakeDirDialog extends React.Component {
 
         this.state = {
             path: '',
+            drive: '',
             nextPanel: nextPanel,
             pathError: false,
             label: '',
@@ -23,15 +24,17 @@ export default class MakeDirDialog extends React.Component {
             transPath:  '',
             transLocation: core.location[nextPanel].path,
             file: null,
+            files: []
         }
     }
 
     componentDidMount() {
-        core.on("getPanelFile", this.handleGetFile);
+        // core.on("getPanelFile", this.handleGetFile);
+        core.on("copiyngFiles", this.handleGetFiles);
 
         core.on('currentLocationChange', this.handleLocationChange);
 
-        core.ipc.on('copyFileCallback', (event, status, err) => {
+        core.ipc.on('copyFilesCallback', (event, status, err) => {
             if (status === 'SUCCESS') {
                 this.setState({
                     transLocation: core.location[this.state.nextPanel].path + (core.location[this.state.nextPanel].path == "/")? '/': '',
@@ -47,11 +50,10 @@ export default class MakeDirDialog extends React.Component {
         })
     }
 
-    handleGetFile = (event, manager, file) => {
-        console.log('Got FILE: ', file);
+    handleGetFiles = (event, files, panelId, isRClick, manager) => {
         this.setState({
+            files: files,
             manager: manager,
-            file: file
         });
         this.forceUpdate();
     }
@@ -108,11 +110,20 @@ export default class MakeDirDialog extends React.Component {
     }
 
     handleCopyClick = () => {
-        if (!this.state.pathError) {
-            if (this.state.path == "" || !this.state.path) {
-                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.file.name);
+        let { displayPath, pathError, transLocation, files, nextPanel, manager } = this.state;
+        if (!pathError) {
+            let update = core.location[nextPanel].path;
+            let drive;
+            let protocol = core.supportedProtocols[displayPath.split('://')[0]];
+            if (displayPath.includes("://") && core.supportedProtocols[displayPath.split('://')[0]]) {
+                drive = protocol
             } else {
-                core.ipc.send("copyFile", core.location[this.props.panelId].path + '/' + this.state.file.name, this.state.transLocation + '/' + this.state.transPath);
+                drive = 'files'
+            }
+            let to = {path: displayPath, drive: drive};
+            console.log(manager);
+            if (manager) {
+                manager.copyFiles(to, files, update);
             }
         }
         
@@ -121,18 +132,28 @@ export default class MakeDirDialog extends React.Component {
    
 
     render() {
+        const { files, displayPath, errorMessage, path, pathError } = this.state;
         return (
             <Dialog open={this.props.open} onClose={this.props.onClose}>
                 <DialogTitle> <span style={{color: '#ffffff'}}>{'Copy File'} </span> </DialogTitle>
                 <DialogContent>
-                    {(this.state.file)? <Typography style={{color: '#ffffff'}}> {this.props.location.path + '/' + this.state.file.name} </Typography>:null}
-                    <Typography style={{color: '#ffffff',}}> {this.state.displayPath} </Typography>
+                    {/* {(this.state.file)? <Typography style={{color: '#ffffff'}}> {this.props.location.path +/ '/' + this.state.file.name} </Typography>:null} */}
+                    <Typography style={{color: "#ffffff"}}>Copy file{files.length>1?"s:" :": "}</Typography>
+                    {
+                        files.map((file, id) => {
+                            return (
+                                <Typography key={file.name}>{file.name}</Typography>
+                            )
+                        })
+                    }
+                    <Typography style={{color: "#ffffff"}}> To </Typography>
+                    <Typography style={{color: '#ffffff',}}> {displayPath} </Typography>
                     <TextField 
-                        error={this.state.pathError} 
-                        label={(this.state.pathError)? this.state.errorMessage : 'Enter path'}
+                        error={pathError} 
+                        label={(pathError)? errorMessage : 'Enter path'}
                         fullWidth={true} 
                         onChange={this.handlePathChange} 
-                        value={this.state.path} 
+                        value={path} 
                         style={{color: '#ffffff'}} 
                     />
                 </DialogContent>

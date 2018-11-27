@@ -12,6 +12,7 @@ export default class DeleteConfirmDialog extends React.Component {
         this.state = {
             files: [],
             perm: false,
+            manager: null
         }
     }
 
@@ -32,18 +33,24 @@ export default class DeleteConfirmDialog extends React.Component {
         })
     }
 
-    handleDeleteItems = (event, files, panelId, rClickAction) => {
-        this.setState({files: files});
+    handleDeleteItems = (event, files, panelId, rClickAction, manager) => {
+        this.setState({
+            files: files,
+            manager: manager
+        });
         if (rClickAction && this.props.panelId == panelId) {
             this.props.onClose();
         }
     }
 
     handleDeleteClick = () => {
-        if (this.state.perm) {
-            core.ipc.send("deleteFilesPerm", this.state.files, core.location[this.props.panelName].path)
-        } else {
-            core.ipc.send("deleteFiles", this.state.files, core.location[this.props.panelName].path)
+        console.log(this.state.perm);
+        let location = core.location[this.props.panelName];
+        let { manager, perm, files } = this.state;
+
+        if (manager) {
+            console.log("DELETE FILES ===>>> ", manager.deleteFiles)
+            manager.deleteFiles(files, perm)
         }
     }
 
@@ -63,20 +70,24 @@ export default class DeleteConfirmDialog extends React.Component {
                     {
                         this.state.files.map((file, id) => {
                             return (
-                                <Typography key={file}>{file}</Typography>
+                                <Typography key={file.name}>{file.name}</Typography>
                             )
                         })
                     }
-                    <FormControlLabel
-                        
-                        control={
-                            <Checkbox 
-                                checked={this.state.perm} 
-                                onChange={this.handleCheck}
-                            />
-                        }
-                        label="Delete permanently"
-                    />
+                    {
+                        core.location[this.props.panelName].drive != "googleDrive"?
+                            <FormControlLabel
+                            
+                                control={
+                                    <Checkbox 
+                                        checked={this.state.perm} 
+                                        onChange={this.handleCheck}
+                                    />
+                                }
+                                label="Delete permanently"
+                            />:null
+                    }
+                    
                 </DialogContent>
                 <DialogActions>
                     <Button style={{color: '#ffffff',}} onClick={this.props.onClose}> Cancel </Button>

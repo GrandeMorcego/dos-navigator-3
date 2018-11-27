@@ -77,7 +77,7 @@ export default class FilePanelManager extends ObservedObject {
                 if (status != 'ERR') {
                     core.emit('gotFileContent', data, file, this.location.path);
                 } else {
-                    console.log("ERRIPC: ", data);
+                    core.emit('displayError', 'Some error has occured while reading this file');
                 }
             });
             
@@ -123,29 +123,68 @@ export default class FilePanelManager extends ObservedObject {
     /** Reads file list in the current location with possible addition 
      * 
      * @param addToPath can be either a sub-path to the current location's path or ".." for parent directory 
-     * 
+     * @param {boolean} fromHomeDir read files from the root of the specified drive
      */
-    readFiles(addToPath, fromHomeDir){
-        if (this.driveHandler) {
-            this.driveHandler.getFiles({
-                sender: this.panelId,
-                location: {
-                    ...this.location, 
-                    addToPath: addToPath,
-                }
-            }, this.handleGetFiles, fromHomeDir);
-        }
+    readFiles(addToPath, fromHomeDir, fileName){
+        console.log(addToPath);
+        // if (addToPath != 'googleDrive') {
+            if (this.driveHandler) {
+                this.driveHandler.getFiles({
+                    sender: this.panelId,
+                    location: {
+                        ...this.location, 
+                        addToPath: addToPath,
+                        fileName: fileName
+                    }
+                }, this.handleGetFiles, fromHomeDir);
+            }
+        // } else {
+        //     let credentials = JSON.parse(localStorage.getItem("googleCredentials"));
+        //     console.log(credentials)
+        //     core.ipc.send("openDrive", credentials);
+        //     core.ipc.once("openDriveCallback", (event, files) => {
+        //         console.log(files);
+        //         this.handleGetFiles({drive: 'googleDrive', path: "Google Drive:/root"}, files);
+        //         console.log(core.location);
+        //     })
+        // }
+        
 
         // core.ipc.removeListener("getFiles", this.handleGetFiles);        
     }
 
-    deleteFiles(file, isRClick) {
+    deleteFiles(files, perm) {
+        if (this.driveHandler) {
+            this.driveHandler.deleteFiles(files, this.location, perm);
+        }
+    }
+
+    createDirectory(path, dir) {
+        if (this.driveHandler) {
+            this.driveHandler.createDirectory(path, dir, this.location);
+        }
+    }
+
+    copyFiles(to, files, update) {
+        console.log("TO ==>> ", to)
+        this.driveHandler.copyFiles(this.location, to, files, update);
+    }
+
+    handleActionFiles(file, isRClick, action) {
+        console.log("GOT ACTION ==>> ", action);
         let files = this.files;
         let deletingFiles = this.getCheckedFiles(files);
         if (deletingFiles == 'NOCHECK' || isRClick) {
-            deletingFiles = [file.name];
+            deletingFiles = [{
+                name: file.name,
+                id: file.fileId,
+                mimeType: file.mimeType,
+                ext: file.ext,
+            }];
+
         }
-        core.emit('deletingFiles', deletingFiles, this.panelId, isRClick);
+
+        core.emit(action, deletingFiles, this.panelId, isRClick, this);
     }
 
     filesSelectByColor = (file, action) => {
@@ -220,7 +259,7 @@ export default class FilePanelManager extends ObservedObject {
     }
 
     reformatPath(value, location) {
-        if ((value.charAt(0) == '/'  && os.type != "Windows_NT") || (value.charAt(1) == ':'  && os.type == "Windows_NT")) {
+        if ((value.charAt(0) == '/'  && os.type != "Windows_NT") || (value.charAt(1) == ':'  && os.type == "Windows_NT") || value.includes("://")) {
             return ['root', value]
         } else if ((value.charAt(1) == ':' && os.type != "Windows_NT") || (value.charAt(0) == '/' && os.type == "Windows_NT")) {
             return ['ERR', 'Wrong path format']
@@ -280,9 +319,12 @@ export default class FilePanelManager extends ObservedObject {
         this.location = { 
             drive: location.drive,  
             path: location.path,
+            realPath: location.realPath
         };
 
         this.selectedCount = 0;
+
+        console.log("In MANAGER ====>>",files);
         
         this.emit("files", { files: this.files, location: this.location, prevSubPath: location.previousSubPath } );
     }
@@ -372,11 +414,16 @@ export default class FilePanelManager extends ObservedObject {
     }
 
     commandOpenDir = ({ file }) => {
-        this.readFiles(file.name);
+        if (this.location.drive != 'googleDrive') {
+            this.readFiles(file.name);
+        } else {
+            this.readFiles(file.fileId, false, file.name);
+        }
     }
 
-    commandOpenParentDir = () => {
+    commandOpenParentDir = (file) => {
         this.readFiles("..");
+
     }
 
     commandOpenRootDir = () => {
@@ -472,7 +519,12 @@ export default class FilePanelManager extends ObservedObject {
         let checkedFiles = [];
         for (let i=0; i<files.length; i++) {
             if (files[i].selected) {
-                checkedFiles.push(files[i].name);
+                checkedFiles.push({
+                    name: files[i].name,
+                    id: files[i].fileId,
+                    mimeType: files[i].mimeType,
+                    ext: files[i].ext,
+                });
             }
         }
         if (checkedFiles[0]){

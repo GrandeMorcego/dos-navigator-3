@@ -14,7 +14,20 @@ const trash = require('trash');
 const childProccess = require('child_process');
 const drivelist = require('drivelist');
 let usbDetect = require('usb-detection');
+const axios = require('axios');
+const qs = require('querystring');
+const {parse} = require('url');
+const Store = require("electron-store");
+const store = new Store();
+// const {google} = require("googleapis");
+let FormData = require("form-data");
+// let Blob = require("blob")
 
+
+// const googleDrive = google.drive({
+//     version: "v3",
+//     auth: "749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com"
+// })
 // let spawn;
 // try {
 //     spawn = pty.spawn
@@ -56,6 +69,199 @@ const createWindow = () => {
 
     mainWindow.on('closed', () => { mainWindow = null; });
 }
+
+const GOOGLE_AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GOOGLE_TOKEN_URL = 'https://www.googleapis.com/oauth2/v4/token';
+const GOOGLE_PROFILE_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
+const GOOGLE_REDIRECT_URI =  'http://localhost:8880'; //'com.dosnavigator.app';
+const GOOGLE_CLIENT_ID = '749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = 'DS9gtsvFUO0G7NR4f9377vnT';
+const GOOGLE_FOLDER = 'application/vnd.google-apps.folder'
+
+let refreshTimeout;
+async function googleSignIn() {
+    const code = await signInWithPopup();
+    const tokens = await fetchAccessTokens(code, 'authorization_code');
+
+    console.log(tokens);
+
+    const {id, email, name} = await fetchGoogleProfile(tokens.access_token);
+    
+    // const { id, email, name } = response;
+
+    const providerUser = {
+        uid: id,
+        email: email,
+        displayName: name,
+        tokens: tokens
+    };
+    providerUser.expiringTime = Math.floor(Date.now()/1000) + 3570;
+    
+    providerUser.refresh_token = tokens.refresh_token;
+
+    let status = '';
+
+    if (providerUser.tokens.id_token) {
+        store.set("googleCredentials", JSON.stringify(providerUser));
+    }
+
+
+    // mainWindow.webContents.send("googleLogInCallback", status, providerUser);
+}
+
+signInWithPopup = () => {
+    return new Promise((resolve, reject) => {
+        // const authWindow = new remote.BrowserWindow({
+        //     width: 500,
+        //     height: 600,
+        //     show: true,
+        // })
+
+        const authWindow = new BrowserWindow({
+            width: 500,
+            height: 600,
+            show: true,
+            parent: mainWindow
+        })
+  
+      // TODO: Generate and validate PKCE code_challenge value
+        const urlParams = {
+            response_type: 'code',
+            redirect_uri: GOOGLE_REDIRECT_URI,
+            client_id: GOOGLE_CLIENT_ID,
+            access_type: "offline",
+            scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
+        }
+        const authUrl = `${GOOGLE_AUTHORIZATION_URL}?${qs.stringify(urlParams)}`
+  
+        handleNavigation = (url) => {
+            const query = parse(url, true).query
+            if (query) {
+                if (query.error) {
+                    reject(new Error(`There was an error: ${query.error}`))
+                } else if (query.code) {
+                    // Login is complete
+                    authWindow.removeAllListeners('closed')
+                    setImmediate(() => authWindow.close())
+
+                    // This is the authorization code we need to request tokens
+                    resolve(query.code)
+                }
+            }
+        }
+  
+    //   authWindow.on('closed', () => {
+    //     // TODO: Handle this smoothly
+    //     throw new Error('Auth window was closed by user')
+    //   })
+    
+        authWindow.webContents.on('will-navigate', (event, url) => {
+            handleNavigation(url);
+        })
+  
+        authWindow.webContents.on('did-get-redirect-request', (event, oldUrl, newUrl) => {
+            handleNavigation(newUrl);
+        })
+
+        authWindow.loadURL(authUrl);
+    })
+}
+
+async function fetchAccessTokens (code, grantType) {
+    const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT_URI,
+        grant_type: grantType,
+    }), {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    })
+
+    return response.data
+}
+
+async function fetchGoogleProfile (accessToken) {
+    const response = await axios.get(GOOGLE_PROFILE_URL, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+    })
+    return response.data
+}
+
+async function refreshGoogleAccessToken () {
+    const credentials = JSON.parse(store.get('googleCredentials'));
+
+    console.log("refresh_token: ", credentials.expiringTime);
+
+    const response = await axios.post(GOOGLE_TOKEN_URL, qs.stringify({
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        grant_type: "refresh_token",
+        refresh_token: credentials.refresh_token
+    }), {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    credentials.expiringTime = Math.floor(Date.now()/1000) + 3570;
+    credentials.tokens = response.data;
+    store.set("googleCredentials", JSON.stringify(credentials));
+}
+
+async function getGoogleDriveData(query) {
+    // const accessToken = credentials.tokens.access_token
+
+    // const {access_token} = JSON.parse(store.get('googleCredentials'));
+
+    let response = await axios.get("https://www.googleapis.com/drive/v3/files", {
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${access_token}`,
+        },
+        params: {
+            key: GOOGLE_CLIENT_ID,
+            fields: 'files,incompleteSearch,kind,nextPageToken',
+            q: query,
+            orderBy: 'folder,name',
+        }
+    }).catch(async err => {
+        // if (err) {
+        //     console.log(err.response);
+        //     await refreshGoogleAccessToken();
+        //     checkGoogleStatus();
+        //     const data = await getGoogleDriveData(query);
+        //     response = data;
+        // }
+    })
+
+    if (response) {
+        return response.data;
+    }
+}
+
+async function deleteGoogleDriveFile(fileId) {
+    let response = await axios.delete(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${accessToken}`,
+        },
+    }).catch(async err => {
+        await refreshGoogleAccessToken();
+        checkGoogleStatus();
+        const data = await deleteGoogleDriveFile(fileId);
+        response = data;
+    })
+
+    if (response) {
+        return response.data;
+    }
+}
+
 
 const windowsExeTypes = {
     ".EXE": true,
@@ -117,11 +323,13 @@ switch (os.platform()) {
 }
 
 const getDrives = () => {
-    drivelist.list((error, drives) => {
-        if (error) {
-            mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
-        } else {
-            mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);
+    drivelist.list((err, drives) => {
+        if (mainWindow) {
+            if (err) {
+                mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
+            } else {
+                mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);
+            }
         }
     })
 }
@@ -142,6 +350,37 @@ usbDetect.on('change', () => {
 
 usbDetect.on('remove', () => {
     getDrives();
+})
+
+ipcMain.on("getGoogleStatus", () => {
+    checkGoogleStatus();
+});
+
+const checkGoogleStatus = () => {
+    const credentials = store.get("googleCredentials");
+    if (credentials) {
+        let parsedCredentials = JSON.parse(credentials);
+        let accessToken = parsedCredentials.tokens.access_token;
+
+        clearTimeout(refreshTimeout);
+
+        console.log("EXPIRING TIME: ", parsedCredentials.expiringTime - Math.floor(Date.now()/1000));
+        refreshTimeout = setTimeout(() => {
+            refreshGoogleAccessToken();
+        }, parsedCredentials.expiringTime*1000 - Date.now());
+
+        axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+        mainWindow.webContents.send("getGoogleStatusCallback", "LOGGED", credentials);
+    } else {
+        mainWindow.webContents.send("getGoogleStatusCallback", "NOT LOGGED", credentials);
+    }
+}
+
+ipcMain.on("googleLogOut", () => {
+    store.delete("googleCredentials");
+    
+    checkGoogleStatus();
 })
 
 ipcMain.on("requestNewWindow", (event, data) => {
@@ -194,7 +433,20 @@ ipcMain.on("createDirectory", (event, location, path) => {
     }
 })
 
-ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
+ipcMain.on("createGDriveDirectory", (event, parent, dir, updateDir) => {
+    console.log("NAME: ", dir);
+    axios.post("https://www.googleapis.com/drive/v3/files", {
+        name: dir,
+        mimeType: GOOGLE_FOLDER,
+        parents: [parent]
+        
+    }).then(response => {
+        mainWindow.webContents.send("createDirectoryCallback", 'success', null);
+        mainWindow.webContents.send("directoryUpdate", updateDir)
+    })
+})
+
+ipcMain.on('renMov', (event, prevLocation, nextLocation) => {   
     fs.rename(prevLocation, nextLocation, (e) => {
         if (e) {
             mainWindow.webContents.send("renMovCallback", e, nextLocation);
@@ -204,36 +456,49 @@ ipcMain.on('renMov', (event, prevLocation, nextLocation) => {
     });
 })
 
-ipcMain.on('deleteFiles', (event, files, path) => {
-    console.log(files);
-    for (let i=0; i<files.length; i++) {
-        let dir = path + '/' + files[i];
-        trash(dir).then(() => {
+ipcMain.on('deleteFiles', (event, files, path, perm) => {
+    if (!perm) {
+        console.log(path);
+
+        for (let i=0; i<files.length; i++) {
+            let dir = path + '/' + files[i].name;
+            trash(dir).then(() => {
+                mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
+            }).catch((err) => {
+                mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
+            })
+        }
+    } else {
+        try {
+            for (let i=0; i<files.length; i++) {
+                let dir = path + '/' + files[i].name;
+                rimraf(dir, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                })
+            }
             mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
-        }).catch((err) => {
+        } catch (err) {
             mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
-        })
+        }
     }
+        
+    
 
 })
 
-ipcMain.on('deleteFilesPerm', (event, files, path) => {
-    console.log(files);
-    try {
-        for (let i=0; i<files.length; i++) {
-            let dir = path + '/' + files[i];
-            rimraf(dir, (err) => {
-                if (err) {
-                    throw err;
-                }
-            })
-        }
-        mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
-    } catch (err) {
-        mainWindow.webContents.send("deleteFilesCallback", 'ERR', err);
-    }
-    
+ipcMain.on("deleteGDriveFiles", async (event, files, path) => {
+    // const credentials = JSON.parse(store.get("googleCredentials"));
+    // const {access_token, refresh_token} = credentials.tokens;
 
+    for (let i=0; i<files.length; i++) {
+        console.log(files[i].id);
+        await deleteGoogleDriveFile(files[i].id);
+    }
+
+    mainWindow.webContents.send("directoryUpdate", path);
+    mainWindow.webContents.send("deleteFilesCallback", 'SUCCESS');
 })
 
 ipcMain.on('readFileContent', (event, path) => {
@@ -266,14 +531,174 @@ ipcMain.on('createFile', (event, path) => {
     })
 })
 
-ipcMain.on('copyFile', (event, oldPath, newPath) => {
-    ncp(oldPath, newPath, (err) => {
-        if (err) {
-            mainWindow.webContents.send('copyFileCallback', 'ERR', err);
+const mimeTypesByExt = {
+    ".DOCX": "application/msword",
+    ".JS": "application/javascript",
+    ".JSON": "application/json",
+    ".XLSX": "application/vnd.ms-excel",
+    ".JPG": "image/jpeg",
+    ".PNG": "image/png",
+    ".SVG": "image/svg+xml",
+    ".PPTX": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+}
+
+ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
+    if (drive == "googleDrive") {
+        console.log("INIT PATH: ", path);
+        let sTo = path.split("/");
+        console.log("SPLITTED: ", sTo);
+        let parent = sTo[sTo.length - 1];
+        console.log("PARENT NAME: ", parent);
+
+        let parentTo;
+        if (parent == "root") {
+            parentTo = parent
         } else {
-            mainWindow.webContents.send('copyFileCallback', 'SUCCESS');
+            parentTo = await getGoogleDriveFile("name", parent);
         }
-    })
+
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+
+            let fileContent = fs.readFileSync(oldPath + "/" + file.name)
+            
+            let mimeType;
+
+            if (mimeTypesByExt[file.ext]) {
+                mimeType = mimeTypesByExt[file.ext];
+            } else {
+                mimeType = "text/plain"
+            }
+
+            let fileSend = {
+                data: Buffer.from(fileContent).toString(),
+                mimeType: mimeType
+            }
+
+            let metadata = {
+                name: file.name,
+                mimeType: mimeType,
+                parents: [parentTo],
+            }
+
+            let accessToken = JSON.parse(store.get("googleCredentials")).tokens.access_token;
+
+            mainWindow.webContents.send("createFormData", metadata, fileSend, accessToken, path);
+        }
+        
+        mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+    } else {
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i].name
+            console.log(file)
+            ncp(oldPath + "/" + file, path + "/" + file, (err) => {
+                if (err) {
+                    // console.log(err);
+                    mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
+                } else {
+                    mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+                }
+            })
+        }
+    }
+})
+
+const googleDocsTypes = {
+    "application/vnd.google-apps.document": {
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ext: ".docx"
+    },
+    "application/vnd.google-apps.drawing": {
+        mimeType:"image/png",
+        ext: ".png"
+    },
+    "application/vnd.google-apps.script": {
+        mimeType:"application/vnd.google-apps.script+json",
+        ext: ".json"
+    },
+    "application/vnd.google-apps.spreadsheet": {
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ext: ".xslx"
+    },
+    "application/vnd.google-apps.presentation": {
+        mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ext: ".pptx"
+    }
+}
+
+ipcMain.on('copyGDriveFiles', async (event, updatePath, {path, drive}, files) => {
+    
+    try {
+        if (drive == "googleDrive") {
+            let sTo = path.split("/");
+            let parent = sTo[sTo.length - 1];
+
+            const parentTo = await getGoogleDriveFile("name", parent);
+            
+            console.log("TO GOOGLE DRIVE", files);
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i].id;
+                    await axios.post(`https://www.googleapis.com/drive/v3/files/${file}/copy`, {
+                        parents: [parentTo],
+                        name: files[i].name
+                    }).catch(err => {
+                        throw err;
+                    })
+                
+            }
+        } else {
+            console.log("TO FILE DRIVE", files);
+            writeFile = (response, file, ext) => {
+                console.log(typeof(Buffer.from(response.data, "binary")));
+                fs.writeFile(path + "/" + file + ext, Buffer.from(response.data, "binary"), (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                });
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i]
+
+                let query;
+                let ext = "";
+                let type = googleDocsTypes[file.mimeType];
+                if (type) {
+                    query = {
+                        endpoint: `https://www.googleapis.com/drive/v3/files/${file.id}/export`,
+                        data: {
+                            mimeType: type.mimeType,
+                        }
+
+                    }
+                    ext = type.ext
+                } else {
+                    query = {
+                        endpoint: `https://www.googleapis.com/drive/v3/files/${file.id}`,
+                        data: {
+                            alt: "media",
+                        }
+                    }
+                }
+
+                await axios.get(query.endpoint, {          
+                    params: query.data,
+                    responseType: "arraybuffer"
+                }).then(response => {
+                    writeFile(response, file.name, ext);
+                }).catch(err => {
+                    throw err;
+                })          
+            }
+        }
+    } catch (err) {
+        mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
+    }
+    
+
+    mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+    mainWindow.webContents.send("directoryUpdate", updatePath);
 })
 
 ipcMain.on('fastCopyFile', (event, files, newPath, action) => {
@@ -309,6 +734,180 @@ ipcMain.on('execFile', (event, path) => {
 ipcMain.on('getDrives', (event) => {
     getDrives();
 })
+
+ipcMain.on('googleLogIn', async (event) => {
+    await googleSignIn().then(e => {
+        // console.log('OKAY')
+        checkGoogleStatus();
+    });
+});
+
+ipcMain.on('getGDriveFiles', async (event, { sender, location, fromHomeDir}) => {
+
+    const credentials = JSON.parse(store.get("googleCredentials"));
+    const {
+        access_token,
+        refresh_token
+    } = credentials.tokens;
+
+    let key;
+    
+    if (location.addToPath === '..') {
+        let parent = location.realPath.split('/')
+        key = parent[parent.length-2]
+    } else if (!location.addToPath) {
+        let parent = location.realPath.split('/')
+        key = parent[parent.length-1]
+    } else {
+        key = fromHomeDir? 'root' : location.addToPath; 
+    }
+
+    console.log('KEY: ', key);
+    
+    getGoogleDriveData(`'${key}' in parents`)
+        .then(async response  =>  {
+            let files = reformatGoogleDriveFiles(response.files);
+            
+            if (location.addToPath != '..') {
+                location.path = fromHomeDir? 'gdrive://root': location.addToPath?location.path + `/${location.fileName}`:location.path
+                location.realPath = fromHomeDir? 'root': location.addToPath? location.realPath + `/${key}`: location.realPath
+            } else {
+                let parent = location.path.split('/')
+                parent.splice(parent.length-1,);
+                location.path = parent.join('/');
+                let rParent = location.realPath.split('/')
+                rParent.splice(rParent.length-1,);
+                location.realPath = rParent.join('/');
+            }
+            mainWindow.webContents.send("getGDriveFilesCallback", sender, location, files);
+        })
+        // .catch(async err => {
+            
+        //     mainWindow.webContents.send("openDriveCallback", data);
+        // });
+
+} )
+
+getGoogleDriveFile = async (entity, file) => {
+    let response;
+    let fileFinal;
+    if (entity == 'id') {
+        response = await axios.get(`https://www.googleapis.com/drive/v3/files/${file}`, {
+            params: {
+                key: GOOGLE_CLIENT_ID,
+            }
+        }).catch(async err => {
+            console.log('ERROR IN files.get');
+            const token = await refreshGoogleAccessToken();
+            getGoogleDriveFile('id', file);
+        });
+        
+        if (response) {
+            fileFinal = response.data.name;
+        }
+    } else if (entity == 'name') {
+        response = await getGoogleDriveData(`name='${file}'`);
+
+        console.log('DONE')
+
+        console.log('FILES: ', response.files);
+        if (response.files && response.files[0]) {
+            fileFinal = response.files[0].id;
+        }
+    }
+     
+
+    return fileFinal
+}
+
+reformatGoogleDriveFiles = (filesList) => {
+    let reFiles = [];
+
+    filesList.forEach((file, id) => {
+        let reFile = {
+            name: file.name,
+            parentId: file.parents[0],
+            createTime: file.createdFile,
+            isDir: (file.mimeType == 'application/vnd.google-apps.folder')? true : false,
+            ext: (file.fileExtension)? '.' + file.fileExtension.toUpperCase():null,
+            modifiedTime: file.modifiedTime,
+            openTime: file.viewedByMe,
+            size: (file.size)?file.size:null,
+            fileId: file.id,
+            mimeType: file.mimeType
+        }
+
+        reFiles.push(reFile);
+    })
+
+    return reFiles;
+}
+
+// iterateFiles = (files) => {
+//     let ids = {}
+
+//     files.forEach(file => {
+//         if (file.mimeType == 'application/vnd.google-apps.folder') {
+//             // const fileParent = await getFileData
+//             ids[file.id] = {
+//                 children: [],
+//                 parentId: ((file.parents && file.parents[0])? file.parents[0]:null),
+//                 file: file
+//             };
+//             console.log(ids[file.id]);
+//         }
+        
+//     })
+
+//     // console.log(ids);
+
+//     files.forEach((file, id) => {
+//         if (file.parents && file.parents[0] && file.mimeType != 'application/vnd.google-apps.folder') {
+//             let parentFile = ids[file.parents[0]];
+//             if (parentFile) {
+//                 // console.log(parentFile.childer)
+
+//                 parentFile.children.push(file);
+//                 files.splice(id, 1);
+//             }
+//         }
+//     })
+
+//     let finallyFiles = [];
+
+//     let pFiles = iterateParentFiles(ids);
+
+
+
+//     for (let file in pFiles) {
+//         if (pFiles[file] != null) {
+//             console.log("I'm broking here: finallyFiles")
+//             finallyFiles.push(pFiles[file]);
+//         }
+//     }
+
+//     finallyFiles.concat(files);
+    
+//     return finallyFiles;
+// }
+
+// iterateParentFiles = (files) => {
+//     let forDeleting = [];
+//     for (let file in files) {
+//         let fFile = files[files[file].parentId];
+//         if (fFile) {
+//             // fFile.children.push(files[file]);
+//             console.log("I'm broking here: iterateParentFiles")
+//             forDeleting.push(file);
+//         } 
+//     }
+
+//     forDeleting.forEach(file => {
+//         files[file] = null;
+//     })
+
+//     return files;
+// }
 
 ipcMain.on("needFiles", (event, data) => {
     const {
@@ -427,6 +1026,7 @@ ipcMain.on("needFiles", (event, data) => {
     } );
 
 } );
+
 
 // expApp.get("/test", (req, res) => {
 //     res.send('Express is open');

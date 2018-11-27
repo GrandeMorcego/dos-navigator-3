@@ -90,12 +90,16 @@
     }
   },
   "dependencies": {
+    "axios": "^0.16.2",
+    "blob": "^0.0.5",
     "drivelist": "^6.3.0",
     "electron-compile": "^6.4.3",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^2.0.0",
     "express": "^4.16.3",
     "express-ws": "^3.0.0",
+    "form-data": "^2.3.3",
+    "googleapis": "^35.0.0",
     "ncp": "^2.0.0",
     "node-pty": "^0.7.4",
     "opn": "^5.3.0",
@@ -110,7 +114,6 @@
   "devDependencies": {
     "@material-ui/core": "^1.0.0",
     "@material-ui/icons": "^1.0.0",
-    "axios": "^0.16.2",
     "babel-core": "^6.23.1",
     "babel-eslint": "^8.2.6",
     "babel-loader": "^6.4.0",
@@ -122,7 +125,7 @@
     "babel-preset-stage-3": "^6.24.1",
     "babel-register": "^6.26.0",
     "css-loader": "^0.28.11",
-    "electron": "^2.0.5",
+    "electron": "^3.0.4",
     "electron-builder": "^20.13.3",
     "electron-forge": "^5.2.2",
     "electron-prebuilt-compile": "2.0.4",

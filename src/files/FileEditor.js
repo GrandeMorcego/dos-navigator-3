@@ -21,14 +21,24 @@ export default class FileEditor extends React.Component {
         core.on('getData', this.getData);
         core.ipc.on('saveFileCallback', this.saveFileCallback);
         core.saveStatus[this.props.name] = true;
-        if (this.props.fileExt == '.JS') {
-            this.setState({editorType: 'javascript'})
-        } else if (this.props.fileExt == '.PY') {
-            this.setState({editorType: 'python'});
-        } else if (this.props.fileExt == ".JSON") {
-            this.setState({editorType: 'json'});
-        } else {
-            this.setState({editorType: 'text'});
+        switch (this.props.fileExt) {
+            case ".JS":
+                this.setState({editorType: 'javascript'});
+                break;
+            case ".PY":
+                this.setState({editorType: 'python'});
+                break;
+            case ".JSON":
+                this.setState({editorType: 'json'});
+                break;
+            case ".CPP":
+                this.setState({editorType: 'cpp'});
+                break;
+            case ".JAVA":
+                this.setState({editorType: 'java'});
+                break;
+            default:
+                this.setState({editorType: 'text'})
         }
     }
 

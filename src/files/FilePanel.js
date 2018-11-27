@@ -165,7 +165,7 @@ class SimpleFileLine extends Component {
                     <MenuItem> RenMov </MenuItem>
                     <MenuItem onClick={
                         (() => {
-                            file.manager.deleteFiles(file, true);
+                            file.manager.handleActionFiles(file, true, "deletingFiles");
                             this.setState({rightClickMenuOpen: false})
                         })
                     }> Delete </MenuItem>
@@ -704,7 +704,7 @@ class SimpleFileListContainer extends Component {
                             break;
                         case "delete":
                             this.props.openActionDialog('deleteConfirmDialog');
-                            this.props.manager.deleteFiles(file);
+                            this.props.manager.handleActionFiles(file, false, "deletingFiles");
                             break; 
                         case 'changePanelMode':
                             for (let i = 0; i<core.filePanelAvaibleModes.length; i++) {
@@ -722,7 +722,8 @@ class SimpleFileListContainer extends Component {
                             this.props.manager.readFile(file) 
                             break;
                         case 'copyFile':
-                            core.emit("getPanelFile", this.props.manager, file);
+                            // core.emit("getPanelFile", this.props.manager);
+                            this.props.manager.handleActionFiles(file, false, "copiyngFiles");
                             this.props.openActionDialog('copyFileDialog');
                             break;
                         case 'fastCutFile':
@@ -969,7 +970,7 @@ class SimpleFileListContainer extends Component {
                         return (
                             <SimpleFileLine 
                                 className={disableSelection}
-                                key={file.name}
+                                key={file.index}
                                 isFocused={isFocused}
                                 hasCheckbox={this.props.hasSelected}
                                 filePanelMode={this.state.filePanelMode}
@@ -1023,10 +1024,10 @@ class SimpleFileListContainer extends Component {
                         file.index = index;
                         file.isCurrent = currentIndex === index;
                         return [
-                            <div key={file.name}>
+                            <div key={file.index}>
                                 <SimpleFileLine 
                                     className={disableSelection}
-                                    key={file.name}
+                                    key={file.index}
                                     isFocused={isFocused}
                                     hasCheckbox={this.props.hasSelected}
                                     file={file}  
@@ -1089,8 +1090,9 @@ export default class FilePanel extends Component {
     }
 
     componentWillReceiveProps(props) {
-        const manager = this.props.manager;
+        const { manager, location } = this.props;
         if (props.manager != manager) {
+            console.log(props.manager);
             if (manager) {
                 manager.off("files", this.handleGetFiles).
                     off("refresh", this.handleRefresh).
@@ -1099,6 +1101,13 @@ export default class FilePanel extends Component {
             }
             this.setManager(props.manager);
         }
+
+        if (props.location && props.location.drive != location.drive) {
+            console.log('I am here');
+
+            props.manager.readFile(null, true);
+        }
+
     }
 
     componentDidMount() {

@@ -18,6 +18,7 @@ import RenMovDialog from './RenMovDialog';
 import DeleteConfirmDialog from './DeleteConfirmDialog';
 import CopyFileDialog from './CopyFileDialog';
 import CreateFileDialog from './CreateFileDialog';
+import drives from '../common/Drives';
 
 let nextPanelId = 1;
 
@@ -49,6 +50,9 @@ class MaskFilter {
 export default class DrivePanel extends Component {
     constructor (props, ...other) {
         super(props, ...other);
+        this.panelId = nextPanelId++;
+        this.manager = new FilePanelManager(this.panelId, props.location);
+
         this.state = {
             location: props.location,
             hasSelected: false,
@@ -58,11 +62,12 @@ export default class DrivePanel extends Component {
                 deleteConfirmDialog: false,
                 createFileDialog: false,
                 copyFileDialog: false,
-            }
+            },
+            manager: this.manager.setHandler( drives && drives.handlers ? drives.handlers[ props.location.drive ] : null )
+            // manager: this.manager.setHandler( drives && drives.handlers ? drives.handlers[ props.location.drive ] : null )
         };
-        this.panelId = nextPanelId++;
+        
 
-        this.manager = new FilePanelManager(this.panelId, props.location);
     }
 
     componentDidMount() {
@@ -70,6 +75,7 @@ export default class DrivePanel extends Component {
         core.on('keyDown', this.handleKeyDown);
         core.on('driveChanged', this.handleDriveChanged);
         core.ipc.on('directoryUpdate', this.handleDirectoryUpdate);
+        core.on('directoryUpdate', this.handleDirectoryUpdate);
     }
 
     componentWillUnount() {
@@ -79,12 +85,23 @@ export default class DrivePanel extends Component {
     }
 
     handleDriveChanged = (event, activePart) => {
-        if (activePart == this.props.partId) {
-            this.manager.readFiles(core.location[this.props.partId].disk, true);
+        let partId = this.props.partId;
+        let drive = core.location[partId].drive;
+        if (activePart == partId) {
+            console.log("CURRENT DRIVES ===>>> ", drive, this.state.location.drive);
+            // if (drive != this.state.location.drive && drive != null) {
+                console.log('DRIVE HANDLERS IS ===>>> ', drives.handlers[drive]);
+                this.setState({manager: this.manager.setHandler(drives.handlers[drive])});
+                
+            // }
+            var timeout = setTimeout(() => {
+                this.manager.readFiles(core.location[this.props.partId].disk, true);
+            }, 1000);
         }
     }
 
     handleDirectoryUpdate = (event, dir) => {
+        console.log("UPDATING DIRECTORY: ", dir);
         if (dir == this.state.location.path) {
             this.manager.readFiles();
         }
@@ -93,7 +110,7 @@ export default class DrivePanel extends Component {
     handleKeyDown = () => {
         if (this.props.isFocused) {
             const cmd = core.keyMapper.mapKeyEvent(event, 'drivePanel');
-            console.log(cmd);
+            // console.log(cmd);
             if (cmd) {
                 switch (cmd.command) {
                     case 'makeDir':
@@ -169,6 +186,7 @@ export default class DrivePanel extends Component {
         const {
             location,
             hasSelected,
+            manager
         } = this.state;
 
         const props = this.props;
@@ -231,7 +249,7 @@ export default class DrivePanel extends Component {
                                             }
                                         } }
                                         hasSelected={hasSelected}
-                                        manager={ this.manager.setHandler( drives && drives.handlers ? drives.handlers[ location.drive ] : null ) }
+                                        manager={ manager }
                                         panelId={ this.panelId }
                                         partId={ props.partId }
                                         driveHandler={ drives && drives.handlers ? drives.handlers[ location.drive ] : null }
