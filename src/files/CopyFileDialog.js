@@ -110,17 +110,17 @@ export default class MakeDirDialog extends React.Component {
     }
 
     handleCopyClick = () => {
-        let { transPath, pathError, transLocation, files, nextPanel, manager } = this.state;
+        let { displayPath, pathError, transLocation, files, nextPanel, manager } = this.state;
         if (!pathError) {
             let update = core.location[nextPanel].path;
             let drive;
-            let protocol = core.supportedProtocols[transPath.split('://')[0]];
-            if (transPath.includes("://") && core.supportedProtocols[transPath.split('://')[0]]) {
+            let protocol = core.supportedProtocols[displayPath.split('://')[0]];
+            if (displayPath.includes("://") && core.supportedProtocols[displayPath.split('://')[0]]) {
                 drive = protocol
             } else {
                 drive = 'files'
             }
-            let to = {path: transPath, drive: drive};
+            let to = {path: displayPath, drive: drive};
             console.log(manager);
             if (manager) {
                 manager.copyFiles(to, files, update);
