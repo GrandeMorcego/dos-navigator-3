@@ -90,6 +90,7 @@
     }
   },
   "dependencies": {
+    "axios": "^0.16.2",
     "blob": "^0.0.5",
     "drivelist": "^6.3.0",
     "electron-compile": "^6.4.3",
@@ -113,7 +114,6 @@
   "devDependencies": {
     "@material-ui/core": "^1.0.0",
     "@material-ui/icons": "^1.0.0",
-    "axios": "^0.16.2",
     "babel-core": "^6.23.1",
     "babel-eslint": "^8.2.6",
     "babel-loader": "^6.4.0",
