@@ -230,13 +230,13 @@ async function getGoogleDriveData(query) {
             orderBy: 'folder,name',
         }
     }).catch(async err => {
-        if (err) {
-            console.log(err.response);
-            await refreshGoogleAccessToken();
-            checkGoogleStatus();
-            const data = await getGoogleDriveData(query);
-            response = data;
-        }
+        // if (err) {
+        //     console.log(err.response);
+        //     await refreshGoogleAccessToken();
+        //     checkGoogleStatus();
+        //     const data = await getGoogleDriveData(query);
+        //     response = data;
+        // }
     })
 
     if (response) {
