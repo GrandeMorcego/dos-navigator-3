@@ -35,6 +35,7 @@ export default class FileOption extends React.Component {
         } else if (this.props.type == "option") {
             let size = this.props.file.size;
             let convertedSize = size;
+            console.log(size);
             let unit = 'B';
             if (size > 1024) {
                 if (size/1024 >= 1024) {

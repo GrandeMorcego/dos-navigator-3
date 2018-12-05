@@ -1,6 +1,6 @@
 // Node JS imports
 import React, {Component} from 'react';
-import { Tabs, Tab, IconButton, Tooltip, Popper, Paper, Grow, MenuList, MenuItem, ClickAwayListener, Menu } from '@material-ui/core';
+import { Tabs, Tab, IconButton, Tooltip, CircularProgress, Paper, Grow, MenuList, MenuItem, ClickAwayListener, Menu } from '@material-ui/core';
 import { Close, MoreVert, CloudDownload } from '@material-ui/icons';
 import FlexBand, { FlexBandItem } from 'flexband'
 
@@ -15,16 +15,23 @@ export default class AppHeader extends React.Component {
         super(props);
         this.state = {
             menuOpen: false,
-            itemMenu: null
+            itemMenu: null,
+            copyProgress: 0
         }
     }
 
     componentDidMount() {
         core.on('updateHeader', () => this.forceUpdate());
+        core.ipc.on("sendProgress", this.handleSendProgress);
     }
 
     componentWillUnmount() {
         core.off('updateHeader', () => this.forceUpdate());
+    }
+
+    handleSendProgress = (event, path, file, progress) => {
+        console.log("COPYING SIZE: ", progress.completedSize, file);
+        this.setState({copyProgress: (progress.completedSize/file.size)*100});
     }
 
     handleCloseClick(tabName, tabPath, tabType) {
@@ -97,6 +104,10 @@ export default class AppHeader extends React.Component {
                                     />
                                 </IconButton>
                             </Tooltip> */}
+                            <CircularProgress
+                                variant="static"
+                                value={this.state.copyProgress}
+                            />
                         </FlexBandItem>
                         <FlexBandItem>
                             <Tooltip title="Properties">

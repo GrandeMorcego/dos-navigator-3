@@ -19,21 +19,8 @@ const qs = require('querystring');
 const {parse} = require('url');
 const Store = require("electron-store");
 const store = new Store();
-// const {google} = require("googleapis");
-let FormData = require("form-data");
-// let Blob = require("blob")
+const cpy = require("cpy");
 
-
-// const googleDrive = google.drive({
-//     version: "v3",
-//     auth: "749480666427-tjqpjhh1rieuetnmq83ph7sn5tn88ung.apps.googleusercontent.com"
-// })
-// let spawn;
-// try {
-//     spawn = pty.spawn
-// } catch (err) {
-//     throw createNodePtyError();
-// }
 ncp.limit = 16;
 
 const fileTypes = require("./files/FileTypes");
@@ -591,13 +578,21 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
         for (let i = 0; i < files.length; i++) {
             let file = files[i].name
             console.log(file)
-            ncp(oldPath + "/" + file, path + "/" + file, (err) => {
-                if (err) {
-                    // console.log(err);
-                    mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
-                } else {
-                    mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
-                }
+            // ncp(oldPath + "/" + file, path + "/" + file, (err) => {
+            //     if (err) {
+            //         // console.log(err);
+            //         mainWindow.webContents.send('copyFilesCallback', 'ERR', err);
+            //     } else {
+            //         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
+            //     }
+            // })
+            let apply = (file.isDir)? '/' + file:null
+
+            cpy(oldPath + '/' + file, path + apply).on("progress", (progress) => {
+                // console.log(progress);
+                mainWindow.webContents.send("sendProgress", oldPath, files[i], progress);
+            }).then(() => {
+                console.log("Files copied: ", file);
             })
         }
     }

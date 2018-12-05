@@ -179,7 +179,9 @@ export default class FilePanelManager extends ObservedObject {
                 name: file.name,
                 id: file.fileId,
                 mimeType: file.mimeType,
+                size: file.size,
                 ext: file.ext,
+                isDir: file.isDir
             }];
 
         }
@@ -524,6 +526,8 @@ export default class FilePanelManager extends ObservedObject {
                     id: files[i].fileId,
                     mimeType: files[i].mimeType,
                     ext: files[i].ext,
+                    size: files[i].size,
+                    isDir: files[i].isDir
                 });
             }
         }
