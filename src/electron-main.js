@@ -20,6 +20,7 @@ const {parse} = require('url');
 const Store = require("electron-store");
 const store = new Store();
 const cpy = require("cpy");
+const getFolderSize = require("get-folder-size");
 
 ncp.limit = 16;
 
@@ -575,8 +576,24 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
         
         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
     } else {
+        let overallSize = 0;
+        let overallProgress = [];
         for (let i = 0; i < files.length; i++) {
-            let file = files[i].name
+            let file = files[i];
+            if (file.isDir) {
+                getFolderSize(oldPath + '/' + file.name, (err, size) => {
+                    if (!err) {
+                        overallSize += size;
+                    }
+                })
+            } else {
+                overallSize += file.size;
+            }
+        }
+
+        console.log(overallSize);
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i].name;
             console.log(file)
             // ncp(oldPath + "/" + file, path + "/" + file, (err) => {
             //     if (err) {
@@ -586,15 +603,18 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
             //         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
             //     }
             // })
-            let apply = (file.isDir)? '/' + file:null
+            let apply = (files[i].isDir)? '/' + file:""
 
-            cpy(oldPath + '/' + file, path + apply).on("progress", (progress) => {
+            await cpy(oldPath + '/' + file, path + apply, {parents: true, nodir: true}).on("progress", (progress) => {
                 // console.log(progress);
-                mainWindow.webContents.send("sendProgress", oldPath, files[i], progress);
+                overallProgress[i] = progress.completedSize;
+                mainWindow.webContents.send("sendProgress", oldPath, i, progress, overallProgress, overallSize);
             }).then(() => {
                 console.log("Files copied: ", file);
             })
         }
+
+        mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
     }
 })
 

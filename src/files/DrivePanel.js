@@ -103,7 +103,12 @@ export default class DrivePanel extends Component {
     handleDirectoryUpdate = (event, dir) => {
         console.log("UPDATING DIRECTORY: ", dir);
         if (dir == this.state.location.path) {
-            this.manager.readFiles();
+            if (this.timer) {
+                clearTimeout(this.timer)
+            }
+            this.timer = setTimeout(() => {
+                this.manager.readFiles();
+            }, 500);
         }
     }
 

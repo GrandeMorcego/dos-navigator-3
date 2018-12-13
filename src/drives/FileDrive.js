@@ -57,6 +57,7 @@ export default class BasicDrive extends ObservedObject {
     }
 
     copyFiles(from, to, files) {
+        core.emit("getCopyingFilesHeader", files);
         core.ipc.send("copyFiles", from.path, to, files);
     }
 }

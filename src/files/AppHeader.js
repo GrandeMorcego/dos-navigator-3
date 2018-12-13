@@ -16,22 +16,64 @@ export default class AppHeader extends React.Component {
         this.state = {
             menuOpen: false,
             itemMenu: null,
-            copyProgress: 0
+            fsProgress: 0,
+            fsOperatingFiles: [],
+            openProgressMenu: false
         }
+        this.timeout;
+        this.updateTime = 0;
     }
 
     componentDidMount() {
         core.on('updateHeader', () => this.forceUpdate());
         core.ipc.on("sendProgress", this.handleSendProgress);
+        core.ipc.on("copyFilesCallback", this.handleFullProgress);
+        core.on("getCopyingFilesHeader", this.handleSetFiles);
     }
 
     componentWillUnmount() {
         core.off('updateHeader', () => this.forceUpdate());
     }
 
-    handleSendProgress = (event, path, file, progress) => {
-        console.log("COPYING SIZE: ", progress.completedSize, file);
-        this.setState({copyProgress: (progress.completedSize/file.size)*100});
+    handleFullProgress = () => {
+        this.setState({fsProgress: 100})
+    }
+
+    handleSetFiles = (event, files) =>{
+        this.setState({fsOperatingFiles: files});
+    }
+
+    handleSendProgress = (event, path, fileIndex, progress, overallProgress, overallSize) => {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        let countedProgress = 0;
+        for (let i = 0; i < overallProgress.length; i++) {
+            countedProgress += overallProgress[i]
+        }
+        let percentage = (countedProgress/overallSize)*100
+        
+        if (this.updateTime == 0) {
+            this.updateTime = Date.now();
+            console.log("UPDATE TIME: ", this.updateTime);
+            this.timeout = setTimeout(() => {
+                let file = this.state.fsOperatingFiles[fileIndex]
+                file.progress = progress.completedSize/file.size;
+                
+                this.setState({
+                    fsProgress: percentage,
+                    fsOperatingFiles: this.state.fsOperatingFiles
+                });
+                
+                console.log("COPYING SIZE: ", overallProgress, overallSize, "timeout");
+            }, 1500);
+        } else if (Date.now() >= this.updateTime + 500) {
+            // console.log("UPDATE TIME: ", this.updateTime);
+            this.setState({fsProgress: percentage});
+            console.log("COPYING SIZE: ", overallProgress, overallSize, "count");
+            this.updateTime = 0;
+        }
     }
 
     handleCloseClick(tabName, tabPath, tabType) {
@@ -60,10 +102,14 @@ export default class AppHeader extends React.Component {
 
     handleOpenGoogleAccountDialog = event => this.propHandler("openGoogleAccountDialog", event);
 
+    handleOpenProgressMenu = () => {
+        this.setState({openProgressMenu: !this.state.openProgressMenu})
+    }
     
     render() {
         // let googleCredentials = JSON.parse(localStorage.getItem("googleCredentials"));
         const { googleCredentials } = this.props;
+        const { fsProgress, menuOpen, itemMenu, openProgressMenu, fsOperatingFiles } = this.state;
         return (
             <FlexBand wrap="nowrap" style={{height: tabHeight}} >
                 <FlexBandItem style={{ width: '90%'}}>
@@ -104,10 +150,48 @@ export default class AppHeader extends React.Component {
                                     />
                                 </IconButton>
                             </Tooltip> */}
-                            <CircularProgress
-                                variant="static"
-                                value={this.state.copyProgress}
-                            />
+                            <Tooltip title={Math.round(fsProgress) + '%'}>
+                                <IconButton
+                                    style={{
+                                        width: 36,
+                                        height: 36
+                                    }}
+                                    onClick={this.handleOpenProgressMenu}
+                                >
+                                    <CircularProgress
+                                        variant="static"
+                                        style={{
+                                            width: 36,
+                                            height: 36
+                                        }}
+                                        value={fsProgress}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                            <Paper
+                                hidden={!openProgressMenu}
+                                id="progress-menu"
+                                style={{
+                                    position: "absolute",
+                                    overflow: "auto",
+                                    minHeight: 100,
+                                    maxHeight: 400,
+                                    width: 100,
+                                    zIndex: 400
+                                    
+                                }}
+                            >
+                                {fsOperatingFiles.map((file) => (
+                                    <div>
+                                        {file.name}
+                                        {file.progress}
+                                    </div>
+                                ))}
+
+                            </Paper>
+                            
+                            
+                            
                         </FlexBandItem>
                         <FlexBandItem>
                             <Tooltip title="Properties">
@@ -128,7 +212,7 @@ export default class AppHeader extends React.Component {
                                     />
                                 </IconButton>
                             </Tooltip>
-                            <Menu open={this.state.menuOpen} onClose={this.handleClickMenu} id={this.state.menuOpen?"props-menu":null} anchorEl={this.state.itemMenu}>                                    
+                            <Menu open={menuOpen} onClose={this.handleClickMenu} id={menuOpen?"props-menu":null} anchorEl={itemMenu}>                                    
                                 <MenuItem onClick={ this.handleOpenOptions }> Preferences </MenuItem>
                                 <MenuItem onClick={ this.handleOpenKeyCommands }> Key commands </MenuItem> 
                                 {(googleCredentials && googleCredentials.displayName)?
