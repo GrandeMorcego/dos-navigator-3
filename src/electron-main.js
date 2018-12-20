@@ -21,7 +21,7 @@ const Store = require("electron-store");
 const store = new Store();
 const cpy = require("cpy");
 const getFolderSize = require("get-folder-size");
-
+const ObservedObject = require("observed-object");
 ncp.limit = 16;
 
 const fileTypes = require("./files/FileTypes");
@@ -613,7 +613,10 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
             //     console.log("Files copied: ", file);
             // })
 
-            copyFile({path: oldPath, name: file}, path);
+            cpFile({path: oldPath, name: file}, path).on("progress", (event, overall) => {
+                overallProgress[i] = overall
+                mainWindow.webContents.send("sendProgress", oldPath, i, overall, overallProgress, overallSize);
+            });
         }
 
         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
@@ -621,6 +624,20 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
 })
 
 const cpFile = ({path, name}, dest) => {
+    let progress = {}
+    let notifier = new ObservedObject();
+    copyFile({path, name}, dest, progress);
+
+    let interval = setInterval(() => {
+        let overall = 0;
+        for (let i in progress) {
+            overall += progress[i]
+        }
+
+        notifier.emit("progress", overall);
+    }, 1000);
+
+    return notifier;
 
 }
 
@@ -634,7 +651,7 @@ const copyFile = ({path, name}, dest, progress) => {
     }
     let stats = fs.statSync(from);
     let isDir = stats.isDirectory();
-    let size = stats.size;
+    let size = stats.size/1024;
     
 
     if (isDir) {
@@ -643,20 +660,29 @@ const copyFile = ({path, name}, dest, progress) => {
         fs.readdir(from, (err, files) => {
             if (!err) {
                 for (let i = 0; i < files.length; i++) {
-                    copyFile({path: from, name: files[i]}, to, sendProgress);
+                    copyFile({path: from, name: files[i]}, to, progress);
                 }
             }
         })
     } else {
-        let fileData = fs.readFileSync(from);
+        // let fileData = fs.readFileSync(from);
+        let fileData = fs.createReadStream(from);
         let writingFile = fs.createWriteStream(to);
-        writingFile.write(Buffer.from(fileData), () => {
-            console.log("COPIED");
-        });
+        fileData.on("data", (chunk) => {
+            writingFile.write(chunk, () => {
+            });
+        })
+
+        
 
         let interval = setInterval(() => {
-            console.log("ALREADY WRITTEN ===>>> ", writingFile.bytesWritten);
+            // console.log("ALREADY WRITTEN ===>>> ", writingFile.bytesWritten);
+            // console.log("PROGRESS");
+            progress[from] = writingFile.bytesWritten;
             if (writingFile.bytesWritten >= size) {
+                console.log("DESTROYING")
+                fileData.destroy();
+                writingFile.destroy();
                 clearInterval(interval);
             }
         }, 2000);
