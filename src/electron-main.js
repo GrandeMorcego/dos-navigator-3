@@ -605,18 +605,63 @@ ipcMain.on('copyFiles', async (event, oldPath, {path, drive}, files) => {
             // })
             let apply = (files[i].isDir)? '/' + file:""
 
-            await cpy(oldPath + '/' + file, path + apply, {parents: true, nodir: true}).on("progress", (progress) => {
-                // console.log(progress);
-                overallProgress[i] = progress.completedSize;
-                mainWindow.webContents.send("sendProgress", oldPath, i, progress, overallProgress, overallSize);
-            }).then(() => {
-                console.log("Files copied: ", file);
-            })
+            // await cpy(oldPath + '/' + file, path + apply, {parents: true, nodir: false}).on("progress", (progress) => {
+            //     // console.log(progress);
+            //     overallProgress[i] = progress.completedSize;
+            //     mainWindow.webContents.send("sendProgress", oldPath, i, progress, overallProgress, overallSize);
+            // }).then(() => {
+            //     console.log("Files copied: ", file);
+            // })
+
+            copyFile({path: oldPath, name: file}, path);
         }
 
         mainWindow.webContents.send('copyFilesCallback', 'SUCCESS');
     }
 })
+
+const cpFile = ({path, name}, dest) => {
+
+}
+
+const copyFile = ({path, name}, dest, progress) => {
+    let from = path + "/" + name;
+    let to = dest + "/" + name;
+    let sendProgress;
+
+    if (!progress) {
+        sendProgress = 0;
+    }
+    let stats = fs.statSync(from);
+    let isDir = stats.isDirectory();
+    let size = stats.size;
+    
+
+    if (isDir) {
+        fs.mkdirSync(to);
+
+        fs.readdir(from, (err, files) => {
+            if (!err) {
+                for (let i = 0; i < files.length; i++) {
+                    copyFile({path: from, name: files[i]}, to, sendProgress);
+                }
+            }
+        })
+    } else {
+        let fileData = fs.readFileSync(from);
+        let writingFile = fs.createWriteStream(to);
+        writingFile.write(Buffer.from(fileData), () => {
+            console.log("COPIED");
+        });
+
+        let interval = setInterval(() => {
+            console.log("ALREADY WRITTEN ===>>> ", writingFile.bytesWritten);
+            if (writingFile.bytesWritten >= size) {
+                clearInterval(interval);
+            }
+        }, 2000);
+    }
+}
 
 const googleDocsTypes = {
     "application/vnd.google-apps.document": {
