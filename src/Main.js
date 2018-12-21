@@ -22,6 +22,7 @@ import ChangeDriveDialog from './files/ChangeDriveDialog';
 import KeyCommandsDialog from './files/KeyCommandsDialog';
 import GoogleAccountDialog from './files/GoogleAccountDialog';
 import axios from 'axios';
+import PdfReader from "./files/pdfReader";
  
 require("xterm/dist/xterm.css");
 require("react-reflex/styles.css");
@@ -79,11 +80,13 @@ const muiTheme = createMuiTheme({
         },
         MuiTab: {
             label: {
-                color: '#ffffff'
+                color: '#ffffff',
+                textOverflow: "ellipsis"
             },
             selected: {
                 backgroundColor: '#415059', 
-            }
+            },
+
         },
         MuiInput: {
             focused: {
@@ -110,7 +113,8 @@ const muiTheme = createMuiTheme({
             body1: {
                 color: '#ffffff' 
             }
-        }
+        },
+
     }
 });
 
@@ -168,7 +172,7 @@ class Main extends Component {
         core.on("keyDown", this.handleSpecialKeyDown);
         core.ipc.on("testEndpoint", this.handleTestEndpoint);
         core.on("keyUp", this.handleSpecialKeyUp);
-        core.on('gotFileContent', this.handleEditFile);
+        core.on('gotFileContent', this.handleFileContent);
         core.on('fileSaveAction', this.fileSaveAction);
         core.on('execBashFile', this.fileExecBash);
         core.on('displayError', this.handleOpenErrorSnackbar);
@@ -193,7 +197,7 @@ class Main extends Component {
         window.removeEventListener("keyup", this.handleKeyUp);
         core.off("keyDown", this.handleSpecialKeyDown);
         core.off("keyUp", this.handleSpecialKeyUp);
-        core.off('gotFileContent', this.handleEditFile);
+        core.off('gotFileContent', this.handleFileContent);
         core.off('fileSaveAction', this.fileSaveAction);
         core.off('execBashFile', this.fileExecBash);
         core.off('displayError', this.handleOpenErrorSnackbar);
@@ -350,26 +354,35 @@ class Main extends Component {
         if (action == 'actioned') {
             this.closeTab(this.state.isClosing.name);
         } 
+        core.saveStatus[this.state.isClosing.name] = null; 
         this.setState({
             isClosing: {},
             openCloseConfirmDialog: false
         })
     }
 
-    handleEditFile = (event, data, file, path) => {
-        let noCreate;
+    checkExistingTab = (file, path) => {
+        let exists;
         this.state.tabs.find((tab) => {
-            if (tab.name == file.name) {
-                noCreate = true;
+            if (tab.name == file.name && tab.path == path) {
+                exists = true;
+                return true;
             }
-        })
-        if (noCreate) {
+        });
+
+        return exists
+
+    }
+
+    handleFileContent = (event, data, file, path, type) => {
+        let exists = this.checkExistingTab(file, path);
+        if (exists) {
             this.setState({tabValue: file.name});
         } else {
             let fileEdit = {
-                type: 'fileEdit',
+                type: type,
                 name: file.name,
-                data: data.toString(),
+                data: data,
                 path: path,
                 fileExt: file.ext
             }
@@ -378,11 +391,24 @@ class Main extends Component {
                 tabValue: file.name
             });
         }
-        let language;
-        if (file.ext == '.JS') {
-            language = 'javascript'
+    }
+
+    handlePdfFile = (event, data, file, path) => {
+        let exists = this.checkExistingTab(file, path);
+        if (exists) {
+            this.setState({tabValue: file.name});
         } else {
-            language = 'text'
+            let fileEdit = {
+                type: 'pdfViewer',
+                name: file.name,
+                data: data,
+                path: path,
+                fileExt: file.ext
+            }
+            this.state.tabs.push(fileEdit);
+            this.setState({
+                tabValue: file.name
+            });
         }
     }
 
@@ -675,7 +701,7 @@ class Main extends Component {
                                     <FileEditor
                                         key={index}
                                         name={tab.name}
-                                        data={tab.data}
+                                        data={tab.data.toString()}
                                         onChange={this.handleEditorChange}
                                         path={tab.path}
                                         fileExt={tab.fileExt}
@@ -685,7 +711,13 @@ class Main extends Component {
                                         <DNTerminal 
                                             terminalId={tab.id}    
                                         />
-                                ) : null
+                                ) : (tab.type == 'pdfViewer')? (
+                                    this.state.tabValue === tab.name &&
+                                    <PdfReader
+                                        data={tab.data}
+                                        name={tab.name}
+                                    />
+                                ) :null
                             )
                         })}
                     </div>

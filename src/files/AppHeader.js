@@ -121,7 +121,7 @@ export default class AppHeader extends React.Component {
                     >
                         {this.props.tabs.map((tab, index) => {
                             return [
-                                <Tab key={index} label={tab.name} value={tab.name} style={{height: tabHeight}} />,
+                                <Tab key={index} label={tab.name} value={tab.name} style={{height: tabHeight, fontSize: 14, textOverflow: "ellipsis"}} />,
                                 
                                 (tab.name != 'Files')?<Close onClick={(() => (this.handleCloseClick(tab.name, tab.path, tab.type)))} style={{position: 'relative', top: 6, right: 30}}/>:null
                             ]
@@ -181,7 +181,7 @@ export default class AppHeader extends React.Component {
                                     
                                 }}
                             >
-                            
+
                                 {fsOperatingFiles.map((file) => (
                                     <div>
                                         {file.name}

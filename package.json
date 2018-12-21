@@ -144,6 +144,7 @@
     "monaco-editor-webpack-plugin": "^1.4.0",
     "node-pre-gyp": "^0.10.3",
     "observed-object": "^0.1.2",
+    "pdfjs-dist": "^2.0.943",
     "prop-types": "^15.6.1",
     "react": "^16.3.2",
     "react-addons-transition-group": "^15.6.2",

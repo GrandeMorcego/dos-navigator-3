@@ -719,7 +719,10 @@ class SimpleFileListContainer extends Component {
                             this.forceUpdate();
                             break;
                         case 'editFile':
-                            this.props.manager.readFile(file) 
+                            this.props.manager.readFile(file, "fileEdit");
+                            break;
+                        case "viewFile":
+                            this.props.manager.readFile(file, "pdfViewer");
                             break;
                         case 'copyFile':
                             // core.emit("getPanelFile", this.props.manager);

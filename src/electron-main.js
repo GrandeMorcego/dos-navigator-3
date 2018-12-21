@@ -492,7 +492,7 @@ ipcMain.on("deleteGDriveFiles", async (event, files, path) => {
 ipcMain.on('readFileContent', (event, path) => {
     fs.readFile(path, 'utf8', (err, data) => {
         if (!err) {
-            mainWindow.webContents.send("readFileContentCallback", 'SUCCESS', data);
+            mainWindow.webContents.send("readFileContentCallback", 'SUCCESS', Buffer.from(data));
         } else {
             mainWindow.webContents.send("readFileContentCallback", 'ERR', err);
         }
@@ -668,9 +668,30 @@ const copyFile = ({path, name}, dest, progress) => {
         // let fileData = fs.readFileSync(from);
         let fileData = fs.createReadStream(from);
         let writingFile = fs.createWriteStream(to);
+        let readFd;
+        let writeFd;
+
+        fileData.on("open", (fd) => {
+            console.log(fd);
+            readFd = fd;
+        })
+
+        writingFile.on("open", (fd) => {
+            console.log(fd);
+            writeFd = fd;
+        })
         fileData.on("data", (chunk) => {
             writingFile.write(chunk, () => {
+                
             });
+        })
+
+        fileData.on("end", () => {
+            console.log("DESTROYING")
+            // fileData.destroy();
+            // writingFile.destroy();
+            fs.closeSync(readFd);
+            fs.closeSync(writeFd);
         })
 
         
@@ -680,12 +701,11 @@ const copyFile = ({path, name}, dest, progress) => {
             // console.log("PROGRESS");
             progress[from] = writingFile.bytesWritten;
             if (writingFile.bytesWritten >= size) {
-                console.log("DESTROYING")
-                fileData.destroy();
-                writingFile.destroy();
+                // 
+                
                 clearInterval(interval);
             }
-        }, 2000);
+        }, 500);
     }
 }
 

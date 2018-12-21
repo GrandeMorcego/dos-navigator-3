@@ -70,12 +70,12 @@ export default class FilePanelManager extends ObservedObject {
      * 
      * @param file File (with all parameters) that need to be read
      */
-    readFile(file) {
+    readFile(file, type) {
         if (!file.isDir) {
             let fileData;
             core.ipc.once('readFileContentCallback', (event, status, data) => {
                 if (status != 'ERR') {
-                    core.emit('gotFileContent', data, file, this.location.path);
+                    core.emit('gotFileContent', data, file, this.location.path, type);
                 } else {
                     core.emit('displayError', 'Some error has occured while reading this file');
                 }

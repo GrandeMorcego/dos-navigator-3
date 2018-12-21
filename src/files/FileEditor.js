@@ -20,7 +20,14 @@ export default class FileEditor extends React.Component {
         core.on('keyDown', this.handleKeyDown);
         core.on('getData', this.getData);
         core.ipc.on('saveFileCallback', this.saveFileCallback);
-        core.saveStatus[this.props.name] = true;
+        window.addEventListener("resize", () => {
+            this.forceUpdate();
+        });
+
+        if (core.saveStatus[this.props.name] == null || core.saveStatus[this.props.name] == undefined) {
+            console.log(core.saveStatus[this.props.name])
+            core.saveStatus[this.props.name] = true;
+        }
         switch (this.props.fileExt) {
             case ".JS":
                 this.setState({editorType: 'javascript'});
@@ -46,6 +53,7 @@ export default class FileEditor extends React.Component {
         core.off('keyDown', this.handleKeyDown);
         core.off('getData', this.getData);
         core.ipc.removeListener('saveFileCallback', this.saveFileCallback);
+        // core.saveStatus[this.props.name] = null;
     }
 
     saveFileCallback = (event, status) => {
