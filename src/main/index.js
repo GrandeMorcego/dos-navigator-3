@@ -4,10 +4,6 @@ const path = require('path');
 const url = require('url');
 const os = require('os');
 const fs = require("fs");
-// const express = require("express");
-// const pty = require("node-pty")
-// const expApp = express()
-// const expressApp = require("express-ws")(expApp)
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const trash = require('trash');
@@ -61,7 +57,7 @@ const createWindow = () => {
         icon: '../../icons/logo.png'
     })
 
-    mainWindow.loadURL(isDev ? "http://localhost:8888" : `file://${__dirname}/../build/index.html`, { });
+    mainWindow.loadURL(isDev ? "http://localhost:8888" : `file://${__dirname}/../dist/renderer/index.html`, { });
 
     if (isDev) {
         mainWindow.webContents.toggleDevTools();
@@ -1027,54 +1023,6 @@ ipcMain.on("needFiles", (event, data) => {
 
 } );
 
-
-// expApp.get("/test", (req, res) => {
-//     res.send('Express is open');
-// })
-
-// expApp.post('/api/openTerminal', (req, res) => {
-//     var term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
-//         name: 'dn-term',
-//         // cols: 80,
-//         // rows: 40,
-//         cwd: process.env.HOME,
-//         env: process.env,
-//         encoding: 'utf-8'
-//     });
-//     terminals[term.pid] = term
-//     // terminal = term;
-    
-//     term.on("data", (data) => {
-//         logs[term.pid] += data;
-//     })
-//     res.send(term.pid.toString());
-//     res.end();
-// })
-
-// expApp.ws('/terminal/:pid', (ws, req) => {
-//     let terminal = terminals[parseInt(req.params.pid)]
-//     terminal.on('data', (data) => {
-//         try {
-//             ws.send(data)
-//         } catch(err) {
-//             console.log(err)
-//         }
-//     });
-
-    
-
-//     ws.on('message', (msg) => {
-//         terminal.write(msg);
-//     });
-
-//     ws.on("close" , () => {
-//         terminal.kill();
-//         terminal = null;
-//         console.log('I am here');
-//     })
-// })
-
-// expApp.listen(3030);
 
 app.on('ready', createWindow);
 

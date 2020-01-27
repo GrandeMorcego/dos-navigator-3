@@ -1,6 +1,6 @@
 import React from 'react';
 import {render} from 'react-dom';
-import { AppContext } from './common/Context';
+import { AppContext } from '../common/Context';
 import Main from './Main'; 
 
 

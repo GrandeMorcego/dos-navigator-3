@@ -2,7 +2,7 @@
   "name": "dn3",
   "version": "0.1.2",
   "description": "Dos Navigator III",
-  "main": "./src/main/index.js",
+  "main": "./dist/main/main.js",
   "author": "Grande Morcego",
   "license": "MIT",
   "scripts": {
@@ -10,7 +10,7 @@
     "start-dev": "webpack-dev-server --port 8888",
     "build": "webpack --config webpack.config.js",
     "build-prod": "webpack --config webpack.config.prod.js",
-    "start": "electron-forge start",
+    "start": "electron-webpack dev",
     "electron": "export NODE_ENV=dev && electron-forge start",
     "package": "export NODE_ENV=prod && electron-forge package",
     "make": "export NODE_ENV=prod && electron-forge make",
@@ -22,6 +22,15 @@
     "dist": "electron-builder"
   },
   "keywords": [],
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
   "build": {
     "appId": "com.electron.${name}",
     "productName": "Dos Navigator III",
@@ -49,7 +58,8 @@
       "sourceDirectory": "src/main"
     },
     "renderer": {
-      "sourceDirectory": null
+      "sourceDirectory": "src/renderer",
+      "template": "src/renderer/index.html"
     }
   },
   "config": {
@@ -99,54 +109,54 @@
     }
   },
   "dependencies": {
-    "electron-webpack": "^2.7.4",
     "source-map-support": "^0.5.13"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/register": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-react": "^7.8.3",
     "@electron-forge/cli": "^6.0.0-beta.45",
     "@electron-forge/maker-dmg": "^6.0.0-beta.45",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.45",
     "@electron-forge/maker-zip": "^6.0.0-beta.45",
     "@material-ui/core": "^4.9.0",
     "@material-ui/icons": "^4.5.1",
-    "axios": "^0.16.2",
+    "axios": "^0.19.2",
     "babel-loader": "^8.0.6",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "blob": "^0.0.5",
+    "builder-util-runtime": "^8.6.0",
     "css-loader": "^3.4.2",
     "drivelist": "^8.0.9",
     "electron": "^4.1.5",
     "electron-compile": "^6.4.3",
     "electron-store": "^2.0.0",
-    "eslint": "^3",
-    "eslint-config-airbnb": "^15",
+    "electron-webpack": "^2.7.4",
+    "eslint": "^6",
+    "eslint-config-airbnb": "^18",
     "eslint-plugin-import": "^2",
     "eslint-plugin-jsx-a11y": "^5",
     "eslint-plugin-react": "^7",
-    "express": "^4.16.3",
-    "express-ws": "^3.0.0",
     "file-loader": "^1.1.11",
     "flexband": "^0.0.3",
     "form-data": "^2.3.3",
     "googleapis": "^35.0.0",
     "html-webpack-plugin": "^2.28.0",
     "ln3": "^0.0.1",
-    "monaco-editor": "0.13.1",
-    "monaco-editor-webpack-plugin": "^1.4.0",
+    "monaco-editor": "0.19.3",
+    "monaco-editor-webpack-plugin": "^1.8.2",
     "ncp": "^2.0.0",
     "node-pty": "^0.9.0",
     "observed-object": "^0.1.2",
     "opn": "^5.3.0",
     "path": "^0.12.7",
     "prop-types": "^15.6.1",
-    "react": "^16.3.2",
-    "react-addons-transition-group": "^15.6.2",
-    "react-dom": "^16.3.2",
-    "react-monaco-editor": "^0.17.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-monaco-editor": "^0.33.0",
     "react-onscroll": "^1.0.4",
     "react-reflex": "^2.2.4",
     "react-scroll-listener": "^0.6.0",
@@ -157,11 +167,11 @@
     "terser-webpack-plugin": "^1.4.1",
     "tls": "^0.0.1",
     "trash": "^4.3.0",
-    "url-loader": "^1.0.1",
+    "url-loader": "^3.0.0",
     "usb-detection": "^4.7.0",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.10.1",
-    "xterm": "^3.3.0"
+    "xterm": "^1.1.3"
   }
 }

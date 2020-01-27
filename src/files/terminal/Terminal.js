@@ -1,14 +1,8 @@
-import { Terminal } from 'xterm';
-import * as attach from 'xterm/lib/addons/attach/attach';
-import * as fit from 'xterm/lib/addons/fit/fit';
-import * as fullscreen from 'xterm/lib/addons/fullscreen/fullscreen'
 import React from 'react';
-import axios from 'axios';
-import os from 'os'
 
 import core from '../../system/core';
 
-require('xterm/lib/addons/fullscreen/fullscreen.css')
+// require('xterm/lib/addons/fullscreen/fullscreen.css')
 
 export default class DNTerminal extends React.Component {
     constructor(props) {

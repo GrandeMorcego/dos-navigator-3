@@ -11,22 +11,24 @@ import os from 'os';
 
 
 // local imports
-import OptionsDialog from './files/OptionsDialog';
-import core from "./system/core";
-import DrivePanel from "./files/DrivePanel";
-import FileEditor from './files/FileEditor';
-import DNTerminal from './files/terminal/Terminal';
-import CloseConfirmDialog from './files/CloseConfirmDialog';
-import AppHeader from './files/AppHeader';
-import ChangeDriveDialog from './files/ChangeDriveDialog';
-import KeyCommandsDialog from './files/KeyCommandsDialog';
-import GoogleAccountDialog from './files/GoogleAccountDialog';
+import OptionsDialog from '../files/OptionsDialog';
+import core from "../system/core";
+import DrivePanel from "../files/DrivePanel";
+import FileEditor from '../files/FileEditor';
+import DNTerminal from '../files/terminal/Terminal';
+import CloseConfirmDialog from '../files/CloseConfirmDialog';
+import AppHeader from '../files/AppHeader';
+import ChangeDriveDialog from '../files/ChangeDriveDialog';
+import KeyCommandsDialog from '../files/KeyCommandsDialog';
+import GoogleAccountDialog from '../files/GoogleAccountDialog';
 import axios from 'axios';
  
-require("xterm/dist/xterm.css");
+// TODO: create own CSS for terminal
+require("xterm/src/xterm.css");
+
 require("react-reflex/styles.css");
 
-require("../fonts/roboto.css");   
+require("../../fonts/roboto.css");   
 
 const tabHeight = 36
 const muiTheme = createMuiTheme({
