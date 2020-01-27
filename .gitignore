@@ -20,6 +20,9 @@
 # VSCode
 /.vscode
 
+# dist is generated during build process
+/dist
+
 # misc
 .DS_Store
 .env.local

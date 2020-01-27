@@ -1,17 +1,16 @@
 {
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "ecmaVersion":6,
-      "ecmaFeatures": {
-        "jsx": true
-      }
-    },
-    "extends": "eslint-config-airbnb",
-    "rules": {
-      "import/extensions": 0,
-      "import/no-extraneous-dependencies": 0,
-      "import/no-unresolved": [2, { "ignore": ["electron"] }],
-      "linebreak-style": 0
-    }
-  }
-  
+  "extends": "eslint-config-airbnb",
+  "rules": {
+    "import/extensions": 0,
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": [2, { "ignore": ["electron"] }],
+    "linebreak-style": 0,
+    "max-len": ["error", { "code": 150 }],
+    "no-param-reassign": ["error", { "props": false }],
+    "no-console": "off",
+  },
+  "env": {
+    "browser": true,
+    "node": true
+}
+}

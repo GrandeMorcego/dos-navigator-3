@@ -36,7 +36,7 @@ let FormData = require("form-data");
 // }
 ncp.limit = 16;
 
-const fileTypes = require("./files/FileTypes");
+const fileTypes = require("../files/FileTypes");
 
 const app = electron.app;
 
@@ -58,7 +58,7 @@ const createWindow = () => {
         width: 1500, 
         height: 900,
         title: 'Dos Navigator III',
-        icon: '../icons/logo.png'
+        icon: '../../icons/logo.png'
     })
 
     mainWindow.loadURL(isDev ? "http://localhost:8888" : `file://${__dirname}/../build/index.html`, { });
