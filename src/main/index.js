@@ -1,5 +1,5 @@
 const electron = require('electron');
-const {webContents, ipcMain} = require('electron');
+const {webContents, ipcMain} = electron;
 const path = require('path');
 const url = require('url');
 const os = require('os');
@@ -327,20 +327,17 @@ switch (os.platform()) {
 
 }
 
-const getDrives = async () => {
-    try {
-        const drives = await drivelist.list();
+const getDrives = () => {
+    drivelist.list().then(drives => {
         console.log('DRIVES ---> ', drives);
-        
         if (mainWindow) {
             mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);
         }
-    
-    } catch (e) {
+    }).catch (err => {
         // todo: make error handling better
-        console.log('DRIVE ERROR - ', e);
+        console.log('DRIVE ERROR - ', err);
         mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
-    }
+    });
 }
 
 // usbDetect.on('add', () => {

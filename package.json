@@ -19,6 +19,7 @@
     "make-win": "set NODE_ENV=prod && electron-forge make",
     "publish": "electron-forge publish",
     "pack": "electron-builder --dir",
+    "rebuild": "electron-rebuild ",
     "dist": "electron-builder"
   },
   "keywords": [],
@@ -60,7 +61,7 @@
     "renderer": {
       "sourceDirectory": "src/renderer",
       "template": "src/renderer/index.html"
-      }
+    }
   },
   "config": {
     "forge": {
@@ -113,9 +114,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
-    "@babel/register": "^7.5.5",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-react": "^7.8.3",
+    "@babel/register": "^7.5.5",
     "@electron-forge/cli": "^6.0.0-beta.45",
     "@electron-forge/maker-dmg": "^6.0.0-beta.45",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.45",
@@ -130,9 +131,10 @@
     "blob": "^0.0.5",
     "builder-util-runtime": "^8.6.0",
     "css-loader": "^3.4.2",
-    "drivelist": "8.0.7",
+    "drivelist": "^8.0.9",
     "electron": "^7.1.10",
     "electron-compile": "^6.4.3",
+    "electron-rebuild": "^1.9.0",
     "electron-store": "^2.0.0",
     "electron-webpack": "^2.7.4",
     "eslint": "^6",

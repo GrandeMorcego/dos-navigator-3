@@ -1,7 +1,7 @@
 const path = require('path');
 const electron = require('electron');
 
-const isDev = false && (process.env.NODE_ENV === 'development');
+const isDev = (process.env.NODE_ENV === 'development');
 
 const core = {
     isDev,
