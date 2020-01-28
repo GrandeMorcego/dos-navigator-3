@@ -60,7 +60,7 @@
     "renderer": {
       "sourceDirectory": "src/renderer",
       "template": "src/renderer/index.html"
-    }
+      }
   },
   "config": {
     "forge": {
@@ -130,8 +130,8 @@
     "blob": "^0.0.5",
     "builder-util-runtime": "^8.6.0",
     "css-loader": "^3.4.2",
-    "drivelist": "^8.0.9",
-    "electron": "^4.1.5",
+    "drivelist": "8.0.7",
+    "electron": "^7.1.10",
     "electron-compile": "^6.4.3",
     "electron-store": "^2.0.0",
     "electron-webpack": "^2.7.4",

@@ -8,8 +8,10 @@ const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const trash = require('trash');
 const childProccess = require('child_process');
+
 const drivelist = require('drivelist');
-let usbDetect = require('usb-detection');
+
+// let usbDetect = require('usb-detection');
 const axios = require('axios');
 const qs = require('querystring');
 const {parse} = require('url');
@@ -19,6 +21,7 @@ const store = new Store();
 let FormData = require("form-data");
 // let Blob = require("blob")
 
+const core = require('./app-core');
 
 // const googleDrive = google.drive({
 //     version: "v3",
@@ -43,21 +46,27 @@ let mainWindow = null;
 
 let fileWatchers = {};
 
-const isDev = (process.env.NODE_ENV + " ").toLowerCase().startsWith("dev") ;
+const { isDev } = core;
 
 console.log("Running environment: ", isDev ? "DEV" : "PROD");
+console.log('APP PATH --->>> ', core.appPath());
+console.log('loading from ', core.appUrl());
 
-usbDetect.startMonitoring();
+// usbDetect.startMonitoring();
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
         width: 1500, 
         height: 900,
         title: 'Dos Navigator III',
-        icon: '../../icons/logo.png'
+        icon: '../../icons/logo.png',
+        webPreferences: {
+            nodeIntegration: true,
+        },
+      
     })
 
-    mainWindow.loadURL(isDev ? "http://localhost:8888" : `file://${__dirname}/../dist/renderer/index.html`, { });
+    mainWindow.loadURL(core.appUrl());
 
     if (isDev) {
         mainWindow.webContents.toggleDevTools();
@@ -318,35 +327,39 @@ switch (os.platform()) {
 
 }
 
-const getDrives = () => {
-    drivelist.list((err, drives) => {
+const getDrives = async () => {
+    try {
+        const drives = await drivelist.list();
+        console.log('DRIVES ---> ', drives);
+        
         if (mainWindow) {
-            if (err) {
-                mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
-            } else {
-                mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);
-            }
+            mainWindow.webContents.send('getDrivesCallback', 'SUCCESS', drives);
         }
-    })
+    
+    } catch (e) {
+        // todo: make error handling better
+        console.log('DRIVE ERROR - ', e);
+        mainWindow.webContents.send('getDrivesCallback', 'ERR', err);
+    }
 }
 
-usbDetect.on('add', () => {
-    let timeout = setTimeout(() => {
-        getDrives();
-    }, 3000);
-})
+// usbDetect.on('add', () => {
+//     let timeout = setTimeout(() => {
+//         getDrives();
+//     }, 3000);
+// })
 
 
 
-usbDetect.on('change', () => {
-    let timeout = setTimeout(() => {
-        getDrives();
-    }, 3000);
-})
+// usbDetect.on('change', () => {
+//     let timeout = setTimeout(() => {
+//         getDrives();
+//     }, 3000);
+// })
 
-usbDetect.on('remove', () => {
-    getDrives();
-})
+// usbDetect.on('remove', () => {
+//     getDrives();
+// })
 
 ipcMain.on("getGoogleStatus", () => {
     checkGoogleStatus();
@@ -1027,7 +1040,7 @@ ipcMain.on("needFiles", (event, data) => {
 app.on('ready', createWindow);
 
 app.on('before-quit', () => {
-    usbDetect.stopMonitoring();
+    // usbDetect.stopMonitoring();
 })
 
 
