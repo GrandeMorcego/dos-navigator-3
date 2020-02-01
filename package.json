@@ -2,7 +2,7 @@
   "name": "dn3",
   "version": "0.1.2",
   "description": "Dos Navigator III",
-  "main": "./dist/main/main.js",
+  "main": "./src/main/index.js",
   "author": "Grande Morcego",
   "license": "MIT",
   "scripts": {
@@ -11,6 +11,7 @@
     "build": "webpack --config webpack.config.js",
     "build-prod": "webpack --config webpack.config.prod.js",
     "start": "electron-webpack dev",
+    "start:forge": "electron-forge start",
     "electron": "export NODE_ENV=dev && electron-forge start",
     "package": "export NODE_ENV=prod && electron-forge package",
     "make": "export NODE_ENV=prod && electron-forge make",
@@ -110,6 +111,7 @@
     }
   },
   "dependencies": {
+    "drivelist": "^8.0.9",
     "source-map-support": "^0.5.13"
   },
   "devDependencies": {
@@ -131,8 +133,7 @@
     "blob": "^0.0.5",
     "builder-util-runtime": "^8.6.0",
     "css-loader": "^3.4.2",
-    "drivelist": "^8.0.9",
-    "electron": "^7.1.10",
+    "electron": "^7.1.11",
     "electron-compile": "^6.4.3",
     "electron-rebuild": "^1.9.0",
     "electron-store": "^2.0.0",
