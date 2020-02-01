@@ -14,11 +14,9 @@ const drivelist = require('drivelist');
 let usbDetect = require('usb-detection');
 
 const core = require('./app-core');
-const { store } = core;
+const { store, isDev } = core;
 
-// const {google} = require("googleapis");
 let FormData = require("form-data");
-// let Blob = require("blob")
 
 
 ncp.limit = 16;
@@ -381,71 +379,6 @@ ipcMain.on('getDrives', (event) => {
     getDrives();
 })
 
-// iterateFiles = (files) => {
-//     let ids = {}
-
-//     files.forEach(file => {
-//         if (file.mimeType == 'application/vnd.google-apps.folder') {
-//             // const fileParent = await getFileData
-//             ids[file.id] = {
-//                 children: [],
-//                 parentId: ((file.parents && file.parents[0])? file.parents[0]:null),
-//                 file: file
-//             };
-//             console.log(ids[file.id]);
-//         }
-        
-//     })
-
-//     // console.log(ids);
-
-//     files.forEach((file, id) => {
-//         if (file.parents && file.parents[0] && file.mimeType != 'application/vnd.google-apps.folder') {
-//             let parentFile = ids[file.parents[0]];
-//             if (parentFile) {
-//                 // console.log(parentFile.childer)
-
-//                 parentFile.children.push(file);
-//                 files.splice(id, 1);
-//             }
-//         }
-//     })
-
-//     let finallyFiles = [];
-
-//     let pFiles = iterateParentFiles(ids);
-
-
-
-//     for (let file in pFiles) {
-//         if (pFiles[file] != null) {
-//             console.log("I'm broking here: finallyFiles")
-//             finallyFiles.push(pFiles[file]);
-//         }
-//     }
-
-//     finallyFiles.concat(files);
-    
-//     return finallyFiles;
-// }
-
-// iterateParentFiles = (files) => {
-//     let forDeleting = [];
-//     for (let file in files) {
-//         let fFile = files[files[file].parentId];
-//         if (fFile) {
-//             // fFile.children.push(files[file]);
-//             console.log("I'm broking here: iterateParentFiles")
-//             forDeleting.push(file);
-//         } 
-//     }
-
-//     forDeleting.forEach(file => {
-//         files[file] = null;
-//     })
-
-//     return files;
-// }
 
 ipcMain.on("needFiles", (event, data) => {
     const {
