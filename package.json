@@ -112,7 +112,8 @@
   },
   "dependencies": {
     "drivelist": "^8.0.9",
-    "source-map-support": "^0.5.13"
+    "source-map-support": "^0.5.13",
+    "usb-detection": "^4.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -170,7 +171,6 @@
     "tls": "^0.0.1",
     "trash": "^4.3.0",
     "url-loader": "^3.0.0",
-    "usb-detection": "^4.7.0",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.10.1",

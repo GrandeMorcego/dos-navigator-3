@@ -11,7 +11,7 @@ const childProccess = require('child_process');
 
 const drivelist = require('drivelist');
 
-// let usbDetect = require('usb-detection');
+let usbDetect = require('usb-detection');
 
 const core = require('./app-core');
 const { store } = core;
@@ -40,7 +40,7 @@ console.log("Running environment: ", isDev ? "DEV" : "PROD");
 console.log('APP PATH --->>> ', core.appPath());
 console.log('loading from ', core.appUrl());
 
-// usbDetect.startMonitoring();
+usbDetect.startMonitoring();
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
@@ -136,23 +136,21 @@ const getDrives = () => {
     });
 }
 
-// usbDetect.on('add', () => {
-//     let timeout = setTimeout(() => {
-//         getDrives();
-//     }, 3000);
-// })
+usbDetect.on('add', () => {
+    let timeout = setTimeout(() => {
+        getDrives();
+    }, 3000);
+});
 
+usbDetect.on('change', () => {
+    let timeout = setTimeout(() => {
+        getDrives();
+    }, 3000);
+});
 
-
-// usbDetect.on('change', () => {
-//     let timeout = setTimeout(() => {
-//         getDrives();
-//     }, 3000);
-// })
-
-// usbDetect.on('remove', () => {
-//     getDrives();
-// })
+usbDetect.on('remove', () => {
+    getDrives();
+});
 
 
 ipcMain.on("requestNewWindow", (event, data) => {
@@ -571,7 +569,7 @@ ipcMain.on("needFiles", (event, data) => {
 app.on('ready', createWindow);
 
 app.on('before-quit', () => {
-    // usbDetect.stopMonitoring();
+    usbDetect.stopMonitoring();
 })
 
 
