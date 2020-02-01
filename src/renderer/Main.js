@@ -69,31 +69,31 @@ const muiTheme = createMuiTheme({
             },
             
         },
-        MuiTabs: {
-            root: {
-                backgroundColor: '#777777',
-                height: tabHeight
-            },
-            indicator: {
-                // backgroundColor: red[500]
-                backgroundColor: '#415059'
-            }
-        },
+        // MuiTabs: {
+        //     root: {
+        //         backgroundColor: '#777777',
+        //         height: tabHeight
+        //     },
+        //     indicator: {
+        //         // backgroundColor: red[500]
+        //         backgroundColor: '#415059'
+        //     }
+        // },
         MuiTab: {
             label: {
                 color: '#ffffff'
             },
-            selected: {
+            "&$selected": {
                 backgroundColor: '#415059', 
             }
         },
         MuiInput: {
-            focused: {
+            "&$focused": {
                 color: '#000000'
             },
         }, 
         MuiRadio: {
-            checked: {
+            "&$checked": {
                 color: '#000000'
             } 
         },

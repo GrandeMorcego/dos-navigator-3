@@ -12,6 +12,7 @@ import core from '../system/core';
 import IconManager from './Icons';
 import FileOption from './FileOption';
 import setFileColor from './Color';
+import ReflexContainer from 'react-reflex/dist/commonjs/ReflexContainer';
 
 
 
@@ -209,6 +210,7 @@ class SimpleFileListContainer extends Component {
 
     componentDidMount() {
         this.mount = true;
+        
         window.addEventListener("mouseup", this.handleSplitterMouseUp);
         window.addEventListener("mousemove", this.handleSplitterDrag);
         core.on("keyDown", this.handleKeyDown);
@@ -951,7 +953,7 @@ class SimpleFileListContainer extends Component {
                 gridSize += columns[i] + 'px '
             }
         }
-
+        
         return (
             (this.state.filePanelMode == "column")?
             <div 
@@ -1089,7 +1091,7 @@ export default class FilePanel extends Component {
             }
     }
 
-    componentWillReceiveProps(props) {
+    UNSAFE_componentWillReceiveProps(props) {
         const { manager, location } = this.props;
         if (props.manager != manager) {
             console.log(props.manager);
@@ -1148,15 +1150,15 @@ export default class FilePanel extends Component {
     }
 
     render() {
+        const files = null;
         const {
-            files,
             loading,
         } = this.state;
 
         if (this.state.dirChanged) {
             setTimeout(()=>(this.setState({ dirChanged: false, prevSubPath: "" })), 1000);
         }
-
+        
         return (
             <ReflexElement>  
                 {                  

@@ -112,8 +112,7 @@ export default class OptionsDialog extends React.Component {
                 <DialogContent>
                     <div style={{height: tabHeight}}>
                     <Tabs 
-                        scrollButtons={'off'} 
-                        scrollable={true} 
+                        scrollButtons={'auto'} 
                         value={this.state.tabValue} 
                         onChange={this.handleTabChange} 
                     >

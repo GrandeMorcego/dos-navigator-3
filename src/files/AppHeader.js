@@ -61,8 +61,7 @@ export default class AppHeader extends React.Component {
             <FlexBand wrap="nowrap" style={{height: tabHeight}} >
                 <FlexBandItem style={{ width: '90%'}}>
                     <Tabs 
-                        scrollButtons={'off'} 
-                        scrollable={true} 
+                        scrollButtons={'auto'} 
                         value={this.props.tabValue} 
                         onChange={this.props.onChange} 
                     >

@@ -60,7 +60,7 @@ class Core extends ObservedObject {
                 files: [],
                 action: ''
             }
-            let disk =  (os.type == "Darwin" || os.type == "Linux")? '/':'C://'
+            let disk =  (os.type === "Darwin" || os.type === "Linux")? '/':'C://'
             this.location = {
                 left: {
                     drive: 'files',

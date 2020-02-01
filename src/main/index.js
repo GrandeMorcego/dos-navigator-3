@@ -32,8 +32,6 @@ let mainWindow = null;
 
 let fileWatchers = {};
 
-const { isDev } = core;
-
 console.log("Running environment: ", isDev ? "DEV" : "PROD");
 console.log('APP PATH --->>> ', core.appPath());
 console.log('loading from ', core.appUrl());
