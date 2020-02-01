@@ -1,10 +1,17 @@
 const path = require('path');
 const electron = require('electron');
+const Store = require("electron-store");
+
+const store = new Store();
+
+const { ipcMain } = electron;
 
 const isDev = (process.env.NODE_ENV === 'development');
 
 const core = {
+    ipcMain,
     isDev,
+    store,
 
     appPath() {
         return process.env.NODE_ENV === 'production'
