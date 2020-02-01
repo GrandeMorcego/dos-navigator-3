@@ -1150,8 +1150,8 @@ export default class FilePanel extends Component {
     }
 
     render() {
-        const files = null;
         const {
+            files,
             loading,
         } = this.state;
 
@@ -1160,7 +1160,7 @@ export default class FilePanel extends Component {
         }
         
         return (
-            <ReflexElement>  
+            <div>  
                 {                  
                 (files) ? (
                     <SimpleFileListContainer 
@@ -1178,7 +1178,7 @@ export default class FilePanel extends Component {
                     />
                 ) : ln3.text("file.panel.file.list.empty", "No files found")
                 }
-            </ReflexElement>                
+            </div>                
         );
     }
 }

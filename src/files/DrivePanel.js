@@ -192,76 +192,76 @@ export default class DrivePanel extends Component {
         const props = this.props;
 
         return (
-            <DriveContext.Consumer orientation="vertical">
-                { drives => (
-                        <ReflexContainer>
-                            <ReflexElement  flex={0.05} className="panel-bk" style={{ minHeight: "2em" , overflow: 'hidden'}} >
-                                <PathPanel 
-                                    location={ location }  
-                                    manager={ this.manager }
-                                    panelId={ this.panelId }
-                                    isFocused={ props.isFocused }
-                                    onFocusRequest={ () => {
-                                        if (props.onFocusRequest) {
-                                            props.onFocusRequest(props.partId)
-                                        }
-                                    } }
-                                    onFilterChange={ this.handleFilterChange }
-                                />
-                            </ReflexElement>
-                            <ReflexElement >
-                                <ReflexContainer orientation="horizontal">
-                                    <CreateFileDialog
-                                        open={this.state.open.createFileDialog}
-                                        onClose={(() => {this.handleOpenDialog('createFileDialog')})}
-                                        location={location}
-                                    />
-                                    <MakeDirDialog 
-                                        open={this.state.open.mkDirDialog} 
-                                        onClose={(() => {this.handleOpenDialog('mkDirDialog')})}
-                                        location={location}
-                                    />
-                                    <CopyFileDialog
-                                        open={this.state.open.copyFileDialog}
-                                        onClose={(() => {this.handleOpenDialog('copyFileDialog')})}
-                                        location={location}
-                                        panelId={this.props.partId}
-                                    />
-                                    <RenMovDialog
-                                        open={this.state.open.renMovDialog}
-                                        onClose={(() => {this.handleOpenDialog('renMovDialog')})}
-                                        location={location}
-                                    />
-                                    <DeleteConfirmDialog
-                                        open={this.state.open.deleteConfirmDialog}
-                                        onClose={(() => {this.handleOpenDialog('deleteConfirmDialog')})}
-                                        panelId={this.panelId}
-                                        panelName={props.partId}
-                                        location={location}
-                                    />
-                                    <FilePanel
-                                        openActionDialog={this.handleOpenDialog}
+            <ReflexElement>
+                <DriveContext.Consumer orientation="vertical">
+                    { drives => (
+                            <ReflexContainer>
+                                <ReflexElement  flex={0.05} className="panel-bk" style={{ minHeight: "2em" , overflow: 'hidden'}} >
+                                    <PathPanel 
+                                        location={ location }  
+                                        manager={ this.manager }
+                                        panelId={ this.panelId }
                                         isFocused={ props.isFocused }
-                                        defaultLocation={ location }
                                         onFocusRequest={ () => {
                                             if (props.onFocusRequest) {
                                                 props.onFocusRequest(props.partId)
                                             }
                                         } }
-                                        hasSelected={hasSelected}
-                                        manager={ manager }
-                                        panelId={ this.panelId }
-                                        partId={ props.partId }
-                                        driveHandler={ drives && drives.handlers ? drives.handlers[ location.drive ] : null }
+                                        onFilterChange={ this.handleFilterChange }
                                     />
-                                    
-                                </ReflexContainer>
-                            </ReflexElement>
-                            
-                        </ReflexContainer>
-                  )  }
-                  
-            </DriveContext.Consumer>
-        );
+                                </ReflexElement>
+                                <ReflexElement >
+                                        <FilePanel
+                                            openActionDialog={this.handleOpenDialog}
+                                            isFocused={ props.isFocused }
+                                            defaultLocation={ location }
+                                            onFocusRequest={ () => {
+                                                if (props.onFocusRequest) {
+                                                    props.onFocusRequest(props.partId)
+                                                }
+                                            } }
+                                            hasSelected={hasSelected}
+                                            manager={ manager }
+                                            panelId={ this.panelId }
+                                            partId={ props.partId }
+                                            driveHandler={ drives && drives.handlers ? drives.handlers[ location.drive ] : null }
+                                        />
+                                        
+                                </ReflexElement>
+                                
+                            </ReflexContainer>
+                    )  }
+                </DriveContext.Consumer>
+                
+                    <CreateFileDialog
+                        open={this.state.open.createFileDialog}
+                        onClose={(() => {this.handleOpenDialog('createFileDialog')})}
+                        location={location}
+                    />
+                    <MakeDirDialog 
+                        open={this.state.open.mkDirDialog} 
+                        onClose={(() => {this.handleOpenDialog('mkDirDialog')})}
+                        location={location}
+                    />
+                    <CopyFileDialog
+                        open={this.state.open.copyFileDialog}
+                        onClose={(() => {this.handleOpenDialog('copyFileDialog')})}
+                        location={location}
+                        panelId={this.props.partId}
+                    />
+                    <RenMovDialog
+                        open={this.state.open.renMovDialog}
+                        onClose={(() => {this.handleOpenDialog('renMovDialog')})}
+                        location={location}
+                    />
+                    <DeleteConfirmDialog
+                        open={this.state.open.deleteConfirmDialog}
+                        onClose={(() => {this.handleOpenDialog('deleteConfirmDialog')})}
+                        panelId={this.panelId}
+                        panelName={props.partId}
+                        location={location}
+                    />
+                    
+            </ReflexElement>        );
     }
 }
